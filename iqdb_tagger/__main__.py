@@ -3,10 +3,9 @@ import os
 import sys
 import re
 import imghdr
-from pprint import pprint
+from pprint import pformat, pprint
 from difflib import Differ
 
-from appdirs import user_data_dir
 from bs4 import BeautifulSoup
 from funclog import funclog
 from PIL import Image
@@ -16,6 +15,8 @@ import mechanicalsoup
 import structlog
 
 from iqdb_tagger import sha256
+from iqdb_tagger.utils import user_data_dir
+
 
 db = "~/images/! tagged"
 size = 200, 200
@@ -23,16 +24,6 @@ minsim = 75
 services = [ '1', '2', '3', '4', '5', '6', '10', '11' ]
 forcegray = False
 log = structlog.getLogger()
-
-
-@funclog(log)
-def get_thumbnail_name(filename):
-    """get thumbnail name."""
-    im_sha256 = sha256.sha256_checksum(filename)
-    img_ext = imghdr.what(filename)
-    if not img_ext:
-        img_ext = os.path.splitext(filename)
-    return '{}.{}'.format(im_sha256, img_ext)
 
 
 def parse_single_result(html_tag):
@@ -63,7 +54,14 @@ def parse_single_result(html_tag):
     # text from tag: '97% similarity'
     thumb = html_tag.img.get('src')
     href = html_tag.a.get('href')
-    status = html_tag.parent.parent.select_one('th').text
+    status = html_tag.parent.parent.select_one('th')
+    if hasattr(status, 'text'):
+        status = status.text
+    else:
+        status = None
+    if status:
+        if status not in ('Best match', 'Possible match'):
+            log.debug('Unknown status', status=status)
     return {
         "href": href,
         # e.g.: //danbooru.donmai.us/posts/993747
@@ -89,40 +87,93 @@ def parse_page_more_match(page):
         yield parse_single_result(html_tag=html_tag)
 
 
-@click.command()
-@click.argument('image')
-def main(image, show='match'):
-    """Get similar image from iqdb."""
-    url = 'http://danbooru.iqdb.org'
+def get_page_result(image):
+    """get page result.
 
-    thumbnail = get_thumbnail_name(filename=image)
-    thumbnail_folder = os.path.join(user_data_dir('iqdb_tagger', 'softashell'), 'thumbs')
-    thumb_path = os.path.join(thumbnail_folder, thumbnail)
-    if not os.path.isdir(thumbnail_folder):
-        os.makedirs(thumbnail_folder, exist_ok=True)
+    Args:
+        image: Image path to be uploaded.
 
-    if not os.path.isfile(thumb_path):
-        size=(300,300)
-        im = Image.open(image)
-        im.thumbnail(size, Image.ANTIALIAS)
-        im.save(thumb_path)
-
+    Returns:
+        HTML page from the result.
+    """
     br = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
     br.raise_on_404=True
-    br.open(url)
+    br.open('http://danbooru.iqdb.org')
     html_form = br.select_form('form')
-    html_form.input({'file': thumb_path})
+    html_form.input({'file': image})
     br.submit_selected()
     # if ok, will output: <Response [200]>
-    best_match_result = parse_page_best_match(br.get_current_page())
-    others_result = parse_page_more_match(br.get_current_page())
+    return br.get_current_page()
+
+
+class ImageMatcher:
+
+    def __init__(self, image):
+        self.image = image
+        self.image_sha256 = sha256.sha256_checksum(image)
+        thumb_name = self.get_thumbnail_name()
+        self.thumbnail_folder = os.path.join(user_data_dir, 'thumbs')
+        self.thumb_path = os.path.join(self.thumbnail_folder, thumb_name)
+
+    def get_thumbnail_name(self):
+        """get thumbnail name."""
+        img_ext = imghdr.what(self.image)
+        if not img_ext:
+            img_ext = os.path.splitext(self.image)
+        return '{}.{}'.format(self.image_sha256, img_ext)
+
+    def create_thumbnail(self):
+        """create thumbnail.
+
+        Returns:
+            Thumbnail path.
+        """
+        if not os.path.isdir(self.thumbnail_folder):
+            os.makedirs(self.thumbnail_folder, exist_ok=True)
+        if not os.path.isfile(self.thumb_path):
+            size=(300,300)
+            im = Image.open(self.image)
+            im.thumbnail(size, Image.ANTIALIAS)
+            im.save(self.thumb_path)
+        return self.thumb_path
+
+    def sync(self, results):
+        pass
+
+
+@click.command()
+@click.option(
+    '--show-mode', type=click.Choice(['best-match', 'match', 'others', 'all']), default='match')
+@click.option('--pager/--no-pager', default=False)
+@click.argument('image')
+def main(image, show_mode='match', pager=False):
+    """Get similar image from iqdb."""
+    im = ImageMatcher(image=image)
+    im.create_thumbnail()
+    page = get_page_result(image=im.thumb_path)
+    # if ok, will output: <Response [200]>
+    best_match_result = parse_page_best_match(page)
+    others_result = parse_page_more_match(page)
+    all_result = list(best_match_result)
+    all_result.extend(others_result)
+    im.sync(all_result)
     result = []
-    if show == 'match':
+    if show_mode == 'best-match':
+        result.extend([x for x in best_match_result if x['status'] == 'Best match'])
+    elif show_mode == 'match':
         result.extend(best_match_result)
-    elif show == 'others':
+    elif show_mode == 'others':
         result.extend(others_result)
-    for item in result:
-        pprint(item)
+    elif show_mode == 'all':
+        result.extend(best_match_result)
+        result.extend(all_result)
+    else:
+        raise ValueError('Unknown show mode: {}'.format(show_mode))
+    if pager:
+        click.echo_via_pager('\n'.join([pformat(x) for x in result]))
+    else:
+        pprint(result)
+
 
 def get_tags(image):
     """ Gets tags from iqdb and symlinks images to tags """
