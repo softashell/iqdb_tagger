@@ -12,9 +12,13 @@ from PIL import Image
 from robobrowser import RoboBrowser
 import click
 import mechanicalsoup
+import peewee
 import structlog
 
-from iqdb_tagger import sha256
+from iqdb_tagger import (
+    sha256,
+    models,
+)
 from iqdb_tagger.utils import user_data_dir
 
 
@@ -138,22 +142,36 @@ class ImageMatcher:
         return self.thumb_path
 
     def sync(self, results):
-        pass
+        for item in results:
+            mr = models.Match(href=item['href'], thumb=item['thumb'], score=item['score'])
+            mr.save()
+            im = models.ImageMatch(
+                image_checksum=self.image_sha256, match_result=mr, similarity=item['similarity'],
+                status=item['status']
+            )
+            im.save()
+            for item_tag in item['tags']:
+                m_tag = models.Tag(name=item_tag)
+                m_tag.save()
+                match_tag = models.MatchTag(match=mr, tag=m_tag)
+                match_tag.save()
 
 
 @click.command()
 @click.option(
-    '--show-mode', type=click.Choice(['best-match', 'match', 'others', 'all']), default='match')
-@click.option('--pager/--no-pager', default=False)
+    '--show-mode', type=click.Choice(['best-match', 'match', 'others', 'all']), default='match',
+    help='Show mode, default:match')
+@click.option('--pager/--no-pager', default=False, help='Use Pager.')
 @click.argument('image')
 def main(image, show_mode='match', pager=False):
     """Get similar image from iqdb."""
+    models.init_db()
     im = ImageMatcher(image=image)
     im.create_thumbnail()
     page = get_page_result(image=im.thumb_path)
     # if ok, will output: <Response [200]>
-    best_match_result = parse_page_best_match(page)
-    others_result = parse_page_more_match(page)
+    best_match_result = list(parse_page_best_match(page))
+    others_result = list(parse_page_more_match(page))
     all_result = list(best_match_result)
     all_result.extend(others_result)
     im.sync(all_result)
