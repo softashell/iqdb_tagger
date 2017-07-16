@@ -1,4 +1,4 @@
-iqdb_tagger
+IQDB TAGGER
 ===========
 
 Overview

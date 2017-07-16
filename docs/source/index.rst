@@ -1,12 +1,11 @@
-Welcome to iqdb_tagger's documentation!
-=========================================
+.. include:: ../../README.rst
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
-
+   changelog
 
 Indices and tables
 ==================

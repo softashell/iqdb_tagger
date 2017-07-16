@@ -48,6 +48,26 @@ help:
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 	@echo "  coverage   to run coverage check of the documentation (if enabled)"
 	@echo "  dummy      to check syntax errors of document sources"
+	@echo "  livehtml   to run sphinx-autobuild"
+
+.PHONY: livehtml
+livehtml:
+	sphinx-autobuild -q \
+		-p 0 \
+		--open-browser \
+		--delay 5 \
+		--ignore "*.swp" \
+		--ignore "*.pdf" \
+		--ignore "*.log" \
+		--ignore "*.out" \
+		--ignore "*.toc" \
+		--ignore "*.aux" \
+		--ignore "*.idx" \
+		--ignore "*.ind" \
+		--ignore "*.ilg" \
+		--ignore "*.tex" \
+		source \
+		$(BUILDDIR)/html
 
 .PHONY: clean
 clean:
