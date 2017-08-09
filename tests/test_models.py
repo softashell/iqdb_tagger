@@ -1,6 +1,4 @@
 """test models."""
-import os
-
 from PIL import Image
 
 from iqdb_tagger import db_version, models
@@ -8,7 +6,7 @@ from iqdb_tagger import db_version, models
 
 def test_get_or_create_from_path(tmpdir):
     """Test method."""
-    folder = tmpdir.mkdir("tmp")
+    folder = tmpdir.mkdir('tmp')
     img_path = folder.join('test.jpg').strpath
     size = (128, 128)
     im = Image.new('RGB', size)

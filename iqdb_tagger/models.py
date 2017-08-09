@@ -2,7 +2,6 @@
 import logging
 import os
 
-from PIL import Image
 from peewee import (
     CharField,
     ForeignKeyField,
@@ -10,6 +9,7 @@ from peewee import (
     Model,
     SqliteDatabase
 )
+from PIL import Image
 
 from iqdb_tagger.sha256 import sha256_checksum
 
@@ -85,7 +85,7 @@ class ImageMatch(BaseModel):
 class ThumbnailRelationship(BaseModel):
     """Thumbnail tag relationship."""
 
-    original = ForeignKeyField(ImageModel, related_name='thumbnail_relationships')
+    original = ForeignKeyField(ImageModel, related_name='thumbnail_relationships')  # NOQA
     thumbnail = ForeignKeyField(ImageModel)
 
     @staticmethod
