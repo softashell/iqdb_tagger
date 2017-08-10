@@ -8,6 +8,7 @@ from difflib import Differ
 import structlog
 from bs4 import BeautifulSoup
 from peewee import (
+    BooleanField,
     CharField,
     DateTimeField,
     ForeignKeyField,
@@ -127,6 +128,7 @@ class ImageMatch(BaseModel):
     status = IntegerField(choices=STATUS_CHOICES)
     search_place = IntegerField(choices=SP_CHOICES)
     created_date = DateTimeField(default=datetime.datetime.now)
+    force_gray = BooleanField(default=False)
 
     @staticmethod
     def parse_table(table):
@@ -191,7 +193,7 @@ class ImageMatch(BaseModel):
             yield res
 
     @staticmethod
-    def get_or_create_from_page(page, image, place=None):
+    def get_or_create_from_page(page, image, place=None, force_gray=False):
         """Get or create from page result."""
         if place is None:
             place = ImageMatch.SP_IQDB
@@ -212,6 +214,7 @@ class ImageMatch(BaseModel):
             yield ImageMatch.get_or_create(
                 match=imr,
                 search_place=place,
+                force_gray=force_gray,
                 defaults={
                     'status': item['status'],
                     'similarity': item['similarity'],
