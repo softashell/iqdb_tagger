@@ -13,10 +13,12 @@ from bs4 import BeautifulSoup
 from PIL import Image
 
 from iqdb_tagger import models, sha256
+from iqdb_tagger.__init__ import db_version
 from iqdb_tagger.utils import user_data_dir
 
 db = '~/images/! tagged'
 size = 200, 200
+DEFAULT_SIZE = 150, 150
 minsim = 75
 services = ['1', '2', '3', '4', '5', '6', '10', '11']
 forcegray = False
@@ -92,7 +94,7 @@ def parse_page_more_match(page):
         yield parse_single_result(html_tag=html_tag)
 
 
-def get_page_result(image):
+def get_page_result(image, url):
     """Get page result.
 
     Args:
@@ -102,7 +104,7 @@ def get_page_result(image):
     """
     br = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
     br.raise_on_404 = True
-    br.open('http://danbooru.iqdb.org')
+    br.open(url)
     html_form = br.select_form('form')
     html_form.input({'file': image})
     br.submit_selected()
@@ -169,20 +171,39 @@ class ImageMatcher:
     type=click.Choice(['best-match', 'match', 'others', 'all']),
     default='match', help='Show mode, default:match')
 @click.option('--pager/--no-pager', default=False, help='Use Pager.')
+@click.option('--resize', is_flag=True, help='Use resized image.')
+@click.option('--size', is_flag=True, help='Specify resized image.')
+@click.option('--db-path', help='Specify Database path.')
 @click.argument('image')
-def main(image, show_mode='match', pager=False):
+def main(
+    image, show_mode='match', pager=False, resize=False, size=None,
+    db_path=None
+):
     """Get similar image from iqdb."""
-    db_path = os.path.join(user_data_dir, 'iqdb.db')
-    models.init_db(db_path)
-    im = ImageMatcher(image=image)
-    im.create_thumbnail()
-    page = get_page_result(image=im.thumb_path)
+    if db_path is None:
+        db_path = os.path.join(user_data_dir, 'iqdb.db')
+    models.init_db(db_path, db_version)
+    img, _ = models.ImageModel.get_or_create_from_path(image)
+    thumb_folder = os.path.join(user_data_dir, 'thumbs')
+    def_thumb_rel, _ = models.ThumbnailRelationship.get_or_create_from_image(
+        image=img, thumb_folder=thumb_folder, size=DEFAULT_SIZE)
+    resized_thumb_rel = None
+    if resize and size:
+        resized_thumb_rel, _ = \
+            models.ThumbnailRelationship.get_or_create_from_image(
+                image=img, thumb_folder=thumb_folder, size=size
+            )
+    elif resize:
+        resized_thumb_rel = def_thumb_rel
+    post_img = resized_thumb_rel.thumbnail \
+        if resized_thumb_rel is not None else img
+    url = 'http://danbooru.iqdb.org'
+    page = get_page_result(image=post_img.path, url=url)
     # if ok, will output: <Response [200]>
     best_match_result = list(parse_page_best_match(page))
     others_result = list(parse_page_more_match(page))
     all_result = list(best_match_result)
     all_result.extend(others_result)
-    im.sync(all_result)
     result = []
     if show_mode == 'best-match':
         result.extend(
