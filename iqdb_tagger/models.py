@@ -4,6 +4,7 @@ import datetime
 import logging
 import os
 from difflib import Differ
+from urllib.parse import urljoin
 
 import structlog
 from bs4 import BeautifulSoup
@@ -69,6 +70,18 @@ class Match(BaseModel):
     width = IntegerField()
     height = IntegerField()
 
+    @property
+    def iqdb_thumb(self):
+        return urljoin('https://iqdb.org', self.thumb)
+
+    @property
+    def size(self):
+        return '{}x{}'.format(self.width, self.height)
+
+    @property
+    def link(self):
+        return urljoin('https://', self.href)
+
 
 class MatchTagRelationship(BaseModel):
     """match tag relationship."""
@@ -85,6 +98,15 @@ class ImageModel(BaseModel):
     height = IntegerField()
     path = CharField(null=True)
 
+    @property
+    def size(self):
+        return '{}x{}'.format(self.width, self.height)
+
+    @property
+    def path_basename(self):
+        """Get path basename."""
+        return os.path.basename(self.path)
+
     @staticmethod
     def get_or_create_from_path(img_path):
         """Get or crate from path."""
@@ -97,6 +119,12 @@ class ImageModel(BaseModel):
             }
         )
         return img, created
+
+    def __str__(self):
+        return '{}, checksum:{}..., size:{}x{} path:{}'.format(
+            super().__str__(), self.checksum[:5],
+            self.width, self.height, self.path
+        )
 
 
 class ImageMatchRelationship(BaseModel):

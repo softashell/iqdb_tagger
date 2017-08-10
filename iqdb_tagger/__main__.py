@@ -15,7 +15,7 @@ from PIL import Image
 
 from iqdb_tagger import models, sha256
 from iqdb_tagger.__init__ import db_version
-from iqdb_tagger.utils import user_data_dir, default_db_path
+from iqdb_tagger.utils import user_data_dir, default_db_path, thumb_folder
 
 db = '~/images/! tagged'
 size = 200, 200
@@ -186,7 +186,6 @@ def main(
         db_path = default_db_path
     models.init_db(db_path, db_version)
     img, _ = models.ImageModel.get_or_create_from_path(image)
-    thumb_folder = os.path.join(user_data_dir, 'thumbs')
     def_thumb_rel, _ = models.ThumbnailRelationship.get_or_create_from_image(
         image=img, thumb_folder=thumb_folder, size=DEFAULT_SIZE)
     resized_thumb_rel = None
