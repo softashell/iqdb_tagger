@@ -20,6 +20,7 @@ from peewee import (
 from PIL import Image
 
 from iqdb_tagger.sha256 import sha256_checksum
+from iqdb_tagger.utils import default_db_path
 
 db = SqliteDatabase(None)
 log = structlog.getLogger()
@@ -244,8 +245,10 @@ class ThumbnailRelationship(BaseModel):
             original=image, thumbnail=thumb)
 
 
-def init_db(db_path, version=1):
+def init_db(db_path=None, version=1):
     """Init db."""
+    if db_path is None:
+        db_path = default_db_path
     db.init(db_path)
     if not os.path.isfile(db_path):
         model_list = [

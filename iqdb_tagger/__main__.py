@@ -15,7 +15,7 @@ from PIL import Image
 
 from iqdb_tagger import models, sha256
 from iqdb_tagger.__init__ import db_version
-from iqdb_tagger.utils import user_data_dir
+from iqdb_tagger.utils import user_data_dir, default_db_path
 
 db = '~/images/! tagged'
 size = 200, 200
@@ -183,7 +183,7 @@ def main(
 ):
     """Get similar image from iqdb."""
     if db_path is None:
-        db_path = os.path.join(user_data_dir, 'iqdb.db')
+        db_path = default_db_path
     models.init_db(db_path, db_version)
     img, _ = models.ImageModel.get_or_create_from_path(image)
     thumb_folder = os.path.join(user_data_dir, 'thumbs')
