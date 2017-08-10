@@ -3,6 +3,7 @@
 import imghdr
 import os
 import re
+import time
 from difflib import Differ
 from pprint import pformat, pprint
 
@@ -174,10 +175,11 @@ class ImageMatcher:
 @click.option('--resize', is_flag=True, help='Use resized image.')
 @click.option('--size', is_flag=True, help='Specify resized image.')
 @click.option('--db-path', help='Specify Database path.')
+@click.option('--html-dump', is_flag=True, help='Dump html for debugging')
 @click.argument('image')
 def main(
     image, show_mode='match', pager=False, resize=False, size=None,
-    db_path=None
+    db_path=None, html_dump=False
 ):
     """Get similar image from iqdb."""
     if db_path is None:
@@ -200,6 +202,15 @@ def main(
     url = 'http://danbooru.iqdb.org'
     page = get_page_result(image=post_img.path, url=url)
     # if ok, will output: <Response [200]>
+    if html_dump:
+        timestr = time.strftime("%Y%m%d-%H%M%S") + '.html'
+        with open(timestr, 'w') as f:
+            f.write(str(page))
+    list(models.ImageMatch.get_or_create_from_page(
+        page=page, image=post_img, place=models.ImageMatch.SP_DANBOORU))
+    # old code
+    if True:
+        return
     best_match_result = list(parse_page_best_match(page))
     others_result = list(parse_page_more_match(page))
     all_result = list(best_match_result)

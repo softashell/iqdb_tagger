@@ -131,11 +131,15 @@ class ImageMatch(BaseModel):
     @staticmethod
     def parse_table(table):
         """Parse table."""
-        header_text = table.select_one('th').text
-        if header_text in ('Your image', 'No relevant matches'):
-            return {}
-        if header_text == 'Possible match':
-            status = ImageMatch.STATUS_POSSIBLE_MATCH
+        header_tag = table.select_one('th')
+        if hasattr(header_tag, 'text'):
+            header_text = header_tag.text
+            if header_text in ('Your image', 'No relevant matches'):
+                return {}
+            if header_text == 'Possible match':
+                status = ImageMatch.STATUS_POSSIBLE_MATCH
+            else:
+                status = ImageMatch.STATUS_OTHER
         else:
             status = ImageMatch.STATUS_OTHER
         td_tags = table.select('td')
@@ -179,7 +183,7 @@ class ImageMatch(BaseModel):
                 soup = BeautifulSoup(f.read(), 'lxml')
             page = soup
 
-        tables = page.select('#pages table')
+        tables = page.select('.pages table')
         for table in tables:
             res = ImageMatch.parse_table(table)
             if not res:
