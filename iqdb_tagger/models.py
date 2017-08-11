@@ -125,7 +125,7 @@ class ImageModel(BaseModel):
         return img, created
 
     def __str__(self):
-        """string repr."""
+        """Get string repr."""
         return '{}, checksum:{}..., size:{}x{} path:{}'.format(
             super().__str__(), self.checksum[:5],
             self.width, self.height, self.path

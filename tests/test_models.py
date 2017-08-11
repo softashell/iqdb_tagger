@@ -32,7 +32,8 @@ def test_get_or_create_from_path(tmpdir):
         '2a951983fcb673f586c698e4ff8c15d930dcc997f897e42aef77a09099673025'
 
 
-def test_thumbnail_rel_get_or_create_existing_thumbnail(tmpdir, caplog):
+def test_thumbnail_rel_get_or_create_existing_thumbnail(tmpdir):
+    """Test method."""
     img_path = get_image(folder=tmpdir, size=(300, 300))
     models.init_db(tmpdir.mkdir('db').join('iqdb.db').strpath, db_version)
     img, _ = models.ImageModel.get_or_create_from_path(img_path)

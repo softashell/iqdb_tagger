@@ -15,7 +15,7 @@ from PIL import Image
 
 from iqdb_tagger import models, sha256
 from iqdb_tagger.__init__ import db_version
-from iqdb_tagger.utils import user_data_dir, default_db_path, thumb_folder
+from iqdb_tagger.utils import default_db_path, thumb_folder, user_data_dir
 
 db = '~/images/! tagged'
 size = 200, 200
@@ -202,7 +202,7 @@ def main(
     page = get_page_result(image=post_img.path, url=url)
     # if ok, will output: <Response [200]>
     if html_dump:
-        timestr = time.strftime("%Y%m%d-%H%M%S") + '.html'
+        timestr = time.strftime('%Y%m%d-%H%M%S') + '.html'
         with open(timestr, 'w') as f:
             f.write(str(page))
     list(models.ImageMatch.get_or_create_from_page(
