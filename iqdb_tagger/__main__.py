@@ -170,7 +170,12 @@ class ImageMatcher:
 @click.option(
     '--show-mode',
     type=click.Choice(['best-match', 'match', 'others', 'all']),
-    default='match', help='Show mode, default:match')
+    default='match', help='Show mode, default:match'
+)
+@click.option(
+    '--place', type=click.Choice(['iqdb', 'danbooru']),
+    default='iqdb', help='Specify iqdb place, default:iqdb'
+)
 @click.option('--pager/--no-pager', default=False, help='Use Pager.')
 @click.option('--resize', is_flag=True, help='Use resized image.')
 @click.option('--size', is_flag=True, help='Specify resized image.')
@@ -179,7 +184,7 @@ class ImageMatcher:
 @click.argument('image')
 def main(
     image, show_mode='match', pager=False, resize=False, size=None,
-    db_path=None, html_dump=False
+    db_path=None, html_dump=False, place='iqdb'
 ):
     """Get similar image from iqdb."""
     if db_path is None:
@@ -198,7 +203,14 @@ def main(
         resized_thumb_rel = def_thumb_rel
     post_img = resized_thumb_rel.thumbnail \
         if resized_thumb_rel is not None else img
-    url = 'http://danbooru.iqdb.org'
+    iqdb_url_dict = {
+        'iqdb': ('http://iqdb.org', models.ImageMatch.SP_IQDB),
+        'danbooru': (
+            'http://danbooru.iqdb.org',
+            models.ImageMatch.SP_DANBOORU
+        ),
+    }
+    url, im_place = iqdb_url_dict[place]
     page = get_page_result(image=post_img.path, url=url)
     # if ok, will output: <Response [200]>
     if html_dump:
@@ -206,7 +218,7 @@ def main(
         with open(timestr, 'w') as f:
             f.write(str(page))
     list(models.ImageMatch.get_or_create_from_page(
-        page=page, image=post_img, place=models.ImageMatch.SP_DANBOORU))
+        page=page, image=post_img, place=im_place))
     # old code
     if True:
         return

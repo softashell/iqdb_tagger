@@ -25,11 +25,13 @@
       <div class="card col-lg-4" id="imr-{{imr.id}}">
         <a class="mx-auto" href="{{imr.match_result.href}}"><img class="card-img-top" src="{{imr.match_result.iqdb_thumb}}"></a>
         <div class="card-block">
-            <p class="card-text">
-              {{imr.imagematch_set[0].similarity}}% {{imr.match_result.size}}<br>
-              {{imr.imagematch_set[0].status_verbose }}<br>
-              {{imr.imagematch_set[0].search_place_verbose }}
-            </p>
+            {% if imr.imagematch_set|length == 1 %}
+              <p class="card-text">
+                {{imr.imagematch_set[0].similarity}}% {{imr.match_result.size}}<br>
+                {{imr.imagematch_set[0].status_verbose }}<br>
+                {{imr.match_result.link_netloc}}
+              </p>
+            {% endif %}
         </div>
       </div>
     {% endfor %}

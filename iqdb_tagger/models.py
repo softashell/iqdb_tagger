@@ -4,7 +4,7 @@ import datetime
 import logging
 import os
 from difflib import Differ
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 import structlog
 from bs4 import BeautifulSoup
@@ -66,9 +66,9 @@ class Match(BaseModel):
     href = CharField(unique=True)
     thumb = CharField()
     rating = CharField()
-    img_alt = TextField()
-    width = IntegerField()
-    height = IntegerField()
+    img_alt = TextField(null=True)
+    width = IntegerField(null=True)
+    height = IntegerField(null=True)
 
     @property
     def iqdb_thumb(self):
@@ -84,6 +84,18 @@ class Match(BaseModel):
     def link(self):
         """Get href link."""
         return urljoin('https://', self.href)
+
+    @property
+    def link_netloc(self):
+        """get readable netloc."""
+        netloc = urlparse(self.link).netloc
+        if netloc.startswith('www.'):
+            netloc = netloc.split('www.', 1)[1]
+        endings = ['.net', '.com', '.us']
+        for ending in endings:
+            if netloc.endswith(ending):
+                netloc = netloc.split(ending, 1)[0]
+        return netloc
 
 
 class MatchTagRelationship(BaseModel):
@@ -190,9 +202,15 @@ class ImageMatch(BaseModel):
             if '[{}]'.format(item[1]) in size_and_rating_text:
                 rating = item[0]
         size = size_and_rating_text.strip().split(' ', 1)[0].split('×')
+        if len(size) == 1 and '×' not in size_and_rating_text:
+            size = (None, None)
+        else:
+            size = (int(size[0]), int(size[1]))
         img_tag = table.select_one('img')
         img_alt = img_tag.attrs.get('alt')
         img_title = img_tag.attrs.get('title')
+        if img_alt == '[IMG]' and img_title is None:
+            img_alt = None
         if img_alt != img_title:
             d = Differ()
             diff_text = '\n'.join(d.compare(img_alt, img_title))
@@ -228,6 +246,12 @@ class ImageMatch(BaseModel):
             res = ImageMatch.parse_table(table)
             if not res:
                 continue
+            a_tags = table.select('a')
+            assert len(a_tags) < 3
+            if len(a_tags) == 2:
+                additional_res = res
+                additional_res['href'] == a_tags[1].attrs.get('href', None)
+                yield additional_res
             yield res
 
     @staticmethod
@@ -241,8 +265,8 @@ class ImageMatch(BaseModel):
                     'thumb': item['thumb'],
                     'rating': item['rating'],
                     'img_alt': item['img_alt'],
-                    'width': int(item['size'][0]),
-                    'height': int(item['size'][1]),
+                    'width': item['size'][0],
+                    'height': item['size'][1],
                 }
             )
             imr, _ = ImageMatchRelationship.get_or_create(
@@ -279,12 +303,12 @@ class ThumbnailRelationship(BaseModel):
     @staticmethod
     def get_or_create_from_image(image, size, thumb_folder=None):
         """Get or create from image."""
-        # TODO: check if thumbnail is already created.
         thumbnails = [
             x for x in image.thumbnails
             if x.thumbnail.width == size[0] and x.thumbnail.height == size[1]
         ]
         if thumbnails:
+            assert len(thumbnails) == 1
             return thumbnails[0], False
         thumb_path = '{}-{}-{}.jpg'.format(image.checksum, size[0], size[1])
         if thumb_folder:
