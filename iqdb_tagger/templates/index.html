@@ -1,12 +1,17 @@
 {% extends "layout.html" %}
 {% block body %}
 <div class="container">
-  <div class="card-group">
   {% for entry in entries %}
+  <div class="card-group">
   {% if entry.imagematchrelationship_set %}
     <div class="card col-lg-2" >
         <a class="mx-auto" href="#"><img class="card-img-top" src="{{url_for('thumb', basename=entry.path_basename)}}"></a>
-        <div class="card-block"><p class="card-text">{{entry.size}}</p></div>
+        <div class="card-block"><p class="card-text">
+          {{entry.size}}
+          {% if entry.thumbnailrelationship_set[0].original %}
+            ({{entry.thumbnailrelationship_set[0].original.size}})
+          {% endif %}
+          </p></div>
     </div>
     {% for imr in entry.imagematchrelationship_set[:4] %}
       <div class="card col-lg-4">
@@ -21,9 +26,9 @@
       </div>
     {% endfor %}
   {% endif %}
+  </div>
   {% else %}
   <p>No match found.</p>
   {% endfor %}
-  </div>
 </div>
 {% endblock %}

@@ -17,7 +17,7 @@ def thumb(basename):
 @app.route('/')
 def index():
     init_db(default_db_path)
-    entries = ImageModel.select()
+    entries = ImageModel.select().order_by(ImageModel.id.desc())
     return render_template('index.html', entries=entries)
 
 
