@@ -78,7 +78,8 @@ class Match(BaseModel):
     @property
     def size(self):
         """Get size string."""
-        return '{}x{}'.format(self.width, self.height)
+        if self.width and self.height:
+            return '{}x{}'.format(self.width, self.height)
 
     @property
     def link(self):
@@ -87,7 +88,7 @@ class Match(BaseModel):
 
     @property
     def link_netloc(self):
-        """get readable netloc."""
+        """Get readable netloc."""
         netloc = urlparse(self.link).netloc
         if netloc.startswith('www.'):
             netloc = netloc.split('www.', 1)[1]
