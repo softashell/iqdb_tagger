@@ -175,7 +175,10 @@ class ImageMatch(BaseModel):
                 return {}
             if header_text == 'Possible match':
                 status = ImageMatch.STATUS_POSSIBLE_MATCH
+            elif header_text in ('Best match', 'Additional match'):
+                status = ImageMatch.STATUS_BEST_MATCH
             else:
+                log.debug('header text', v=header_text)
                 status = ImageMatch.STATUS_OTHER
         else:
             status = ImageMatch.STATUS_OTHER
