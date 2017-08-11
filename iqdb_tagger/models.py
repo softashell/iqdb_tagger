@@ -72,14 +72,17 @@ class Match(BaseModel):
 
     @property
     def iqdb_thumb(self):
+        """Get iqdb thumb url."""
         return urljoin('https://iqdb.org', self.thumb)
 
     @property
     def size(self):
+        """Get size string."""
         return '{}x{}'.format(self.width, self.height)
 
     @property
     def link(self):
+        """Get href link."""
         return urljoin('https://', self.href)
 
 
@@ -100,6 +103,7 @@ class ImageModel(BaseModel):
 
     @property
     def size(self):
+        """Get size string."""
         return '{}x{}'.format(self.width, self.height)
 
     @property
@@ -121,6 +125,7 @@ class ImageModel(BaseModel):
         return img, created
 
     def __str__(self):
+        """string repr."""
         return '{}, checksum:{}..., size:{}x{} path:{}'.format(
             super().__str__(), self.checksum[:5],
             self.width, self.height, self.path
@@ -253,10 +258,12 @@ class ImageMatch(BaseModel):
 
     @property
     def status_verbose(self):
+        """Get verbose status."""
         return dict(ImageMatch.STATUS_CHOICES)[self.status]
 
     @property
     def search_place_verbose(self):
+        """Get verbose search place."""
         return dict(ImageMatch.SP_CHOICES)[self.search_place]
 
 
@@ -270,6 +277,12 @@ class ThumbnailRelationship(BaseModel):
     def get_or_create_from_image(image, size, thumb_folder=None):
         """Get or create from image."""
         # TODO: check if thumbnail is already created.
+        thumbnails = [
+            x for x in image.thumbnails
+            if x.thumbnail.width == size[0] and x.thumbnail.height == size[1]
+        ]
+        if thumbnails:
+            return thumbnails[0], False
         thumb_path = '{}-{}-{}.jpg'.format(image.checksum, size[0], size[1])
         if thumb_folder:
             thumb_path = os.path.join(thumb_folder, thumb_path)
