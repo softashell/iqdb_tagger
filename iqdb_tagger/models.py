@@ -130,8 +130,8 @@ class ImageModel(BaseModel):
 class ImageMatchRelationship(BaseModel):
     """Image and match result."""
 
-    image = ForeignKeyField(ImageModel, related_name='match_relationship')
-    match_result = ForeignKeyField(Match, related_name='related_to_match_image')  # NOQA
+    image = ForeignKeyField(ImageModel)
+    match_result = ForeignKeyField(Match)  # NOQA
 
 
 class ImageMatch(BaseModel):
@@ -143,7 +143,8 @@ class ImageMatch(BaseModel):
     STATUS_OTHER = 3
     STATUS_CHOICES = (
         (STATUS_UNKNOWN, 'Unknown'),
-        (STATUS_BEST_MATCH, 'Possible match'),
+        (STATUS_BEST_MATCH, 'Best match'),
+        (STATUS_POSSIBLE_MATCH, 'Possible match'),
         (STATUS_OTHER, 'Other'),
     )
     SP_IQDB = 0
@@ -250,12 +251,20 @@ class ImageMatch(BaseModel):
                 }
             )
 
+    @property
+    def status_verbose(self):
+        return dict(ImageMatch.STATUS_CHOICES)[self.status]
+
+    @property
+    def search_place_verbose(self):
+        return dict(ImageMatch.SP_CHOICES)[self.search_place]
+
 
 class ThumbnailRelationship(BaseModel):
     """Thumbnail tag relationship."""
 
-    original = ForeignKeyField(ImageModel, related_name='relationship')  # NOQA
-    thumbnail = ForeignKeyField(ImageModel, related_name='related_to')
+    original = ForeignKeyField(ImageModel, related_name='thumbnails')  # NOQA
+    thumbnail = ForeignKeyField(ImageModel)
 
     @staticmethod
     def get_or_create_from_image(image, size, thumb_folder=None):

@@ -3,16 +3,20 @@
 <div class="container">
   <div class="card-group">
   {% for entry in entries %}
-  {% if entry.match_relationship %}
+  {% if entry.imagematchrelationship_set %}
     <div class="card col-lg-2" >
-        <a class="mx-auto" href="#"><img class="card-img-top" src="{{url_for('thumb', filename=entry.path_basename)}}"></a>
+        <a class="mx-auto" href="#"><img class="card-img-top" src="{{url_for('thumb', basename=entry.path_basename)}}"></a>
         <div class="card-block"><p class="card-text">{{entry.size}}</p></div>
     </div>
-    {% for imr in entry.match_relationship[:4] %}
+    {% for imr in entry.imagematchrelationship_set[:4] %}
       <div class="card col-lg-4">
         <a class="mx-auto" href="{{imr.match_result.href}}"><img class="card-img-top" src="{{imr.match_result.iqdb_thumb}}"></a>
         <div class="card-block">
-            <p class="card-text">{{imr.imagematch_set[0].similarity}}% {{imr.match_result.size}}</p>
+            <p class="card-text">
+              {{imr.imagematch_set[0].similarity}}% {{imr.match_result.size}}<br>
+              {{imr.imagematch_set[0].status_verbose }}<br>
+              {{imr.imagematch_set[0].search_place_verbose }}
+            </p>
         </div>
       </div>
     {% endfor %}
