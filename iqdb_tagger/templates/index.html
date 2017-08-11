@@ -1,10 +1,18 @@
 {% extends "layout.html" %}
 {% block body %}
 <div class="container">
+    <form class="form-inline">
+      <div class="form-group">
+        <label for="InputFile">Image input</label>
+        <input type="file" class="form-control-file" id="file" aria-describedby="fileHelp">
+        <small id="fileHelp" class="form-text text-muted">Upload picture here.</small>
+        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Submit</button>
+      </div>
+    </form>
   {% for entry in entries %}
-  <div class="card-group">
   {% if entry.imagematchrelationship_set %}
-    <div class="card col-lg-2" >
+    <div class="card-group">
+    <div class="card col-lg-2" id="image-model-{{entry.id}}">
         <a class="mx-auto" href="#"><img class="card-img-top" src="{{url_for('thumb', basename=entry.path_basename)}}"></a>
         <div class="card-block"><p class="card-text">
           {{entry.size}}
@@ -14,7 +22,7 @@
           </p></div>
     </div>
     {% for imr in entry.imagematchrelationship_set[:4] %}
-      <div class="card col-lg-4">
+      <div class="card col-lg-4" id="imr-{{imr.id}}">
         <a class="mx-auto" href="{{imr.match_result.href}}"><img class="card-img-top" src="{{imr.match_result.iqdb_thumb}}"></a>
         <div class="card-block">
             <p class="card-text">
@@ -25,8 +33,8 @@
         </div>
       </div>
     {% endfor %}
+    </div>
   {% endif %}
-  </div>
   {% else %}
   <p>No match found.</p>
   {% endfor %}
