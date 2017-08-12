@@ -13,6 +13,8 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 install_requires = [
+    'appdirs>=1.4.3',
+    'beautifulsoup4>=4.6.0',
     'click>=6.7',
     'funclog>=0.3.0',
     'lxml>=3.8.0',
