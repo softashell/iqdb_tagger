@@ -4,10 +4,11 @@ IQDB TAGGER
 Overview
 --------
 
-Get result from iqdb.org from CLI.
+Get result from iqdb.org from CLI using python3.
 
 Feature::
 
+ - Written for python3
  - iqdb and danbooru.iqdb parser
  - Hydrus integration
 
