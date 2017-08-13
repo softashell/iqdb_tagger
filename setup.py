@@ -15,6 +15,7 @@ install_requires = [
     'appdirs>=1.4.3',
     'beautifulsoup4>=4.6.0',
     'click>=6.7',
+    'Flask>=0.12.2',
     'funclog>=0.3.0',
     'lxml>=3.8.0',
     'MechanicalSoup>=0.7.0',
