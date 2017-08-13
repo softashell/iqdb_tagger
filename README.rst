@@ -45,6 +45,20 @@ Or clone the repo:
     $ git clone https://github.com/rachmadaniHaryono/iqdb_tagger.git
     $ python setup.py install
 
+FAQ
+---
+
+libxml error in Windows
+```````````````````````
+
+If you are encounter this error on Windows
+
+.. code::
+
+    Could not find function xmlCheckVersion in library libxml2. Is libxml2 installed?
+
+Please follow this guide to install lxml: `StackOverflow - how to install lxml on windows?`_
+
 Contributing
 ------------
 
@@ -60,3 +74,5 @@ Authors
 -------
 
 iqdb_tagger was written by softashell and maintained by Rachmadani Haryono
+
+.. _StackOverflow - how to install lxml on windows?: https://stackoverflow.com/questions/29440482/how-to-install-lxml-on-windows
