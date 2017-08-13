@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """server module."""
 import os
+from math import ceil
 
 from flask import (
+    abort,
     Flask,
     flash,
     redirect,
@@ -35,8 +37,43 @@ def thumb(basename):
     return send_from_directory(thumb_folder, basename)
 
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
+class Pagination(object):
+    """Pagination object."""
+
+    def __init__(self, page, per_page, total_count):
+        self.page = page
+        self.per_page = per_page
+        self.total_count = total_count
+
+    @property
+    def pages(self):
+        return int(ceil(self.total_count / float(self.per_page)))
+
+    @property
+    def has_prev(self):
+        return self.page > 1
+
+    @property
+    def has_next(self):
+        return self.page < self.pages
+
+    def iter_pages(
+            self, left_edge=2, left_current=2, right_current=5, right_edge=2):
+        last = 0
+        for num in range(1, self.pages + 1):
+            if num <= left_edge or (
+                num > self.page - left_current - 1 and
+                num < self.page + right_current
+            ) or num > self.pages - right_edge:
+                if last + 1 != num:
+                    yield None
+                yield num
+                last = num
+
+
+@app.route('/', methods=['GET', 'POST'], defaults={'page': 1})
+@app.route('/page/<int:page>')
+def index(page):
     """Get index page."""
     if request.method == 'POST':
         # check if the post request has the file part
@@ -77,11 +114,12 @@ def index():
             .select().join(ImageMatch) \
             .where(ImageMatch.search_place == im_place)
         if not query.exists():
-            page = get_page_result(image=posted_img.path, url=url)
+            result_page = get_page_result(image=posted_img.path, url=url)
             list(ImageMatch.get_or_create_from_page(
-                page=page, image=posted_img, place=im_place))
+                page=result_page, image=posted_img, place=im_place))
         return redirect(url_for('match_sha256', checksum=posted_img.checksum))
     init_db(default_db_path)
+    item_per_page = 10
     entries = (
         ImageModel.select()
         .distinct()
@@ -89,7 +127,18 @@ def index():
         .where(ImageMatchRelationship.image)
         .order_by(ImageModel.id.desc())
     )
-    return render_template('index.html', entries=entries)
+    paginated_entries = entries.paginate(page, item_per_page)
+    if not entries.exists() and page != 1:
+        abort(404)
+    pagination = Pagination(page, item_per_page, entries.count())
+    return render_template(
+        'index.html', entries=paginated_entries, pagination=pagination)
+
+
+def url_for_index_page(page):
+    args = request.view_args.copy()
+    args['page'] = page
+    return url_for(request.endpoint, **args)
 
 
 @app.route('/match/sha256-<checksum>', methods=['GET', 'POST'])
@@ -102,8 +151,9 @@ def match_sha256(checksum):
 
 def main():
     """Run main func."""
-    app.run()
+    app.jinja_env.globals['url_for_index_page'] = url_for_index_page
+    app.run(debug=True)
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    main()

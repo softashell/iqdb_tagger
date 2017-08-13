@@ -45,5 +45,33 @@
   {% else %}
   <p>No match found.</p>
   {% endfor %}
+  {{render_pagination(pagination)}}
 </div>
 {% endblock %}
+
+{% macro render_pagination(pagination) %}
+  <nav aria-label="Page navigation example">
+    <ul class="pagination">
+      {%- for page in pagination.iter_pages() %}
+        {% if page %}
+          {% if page != pagination.page %}
+            <li class="page-item">
+              <a class="page-link" href="{{ url_for_index_page(page) }}">{{ page }}</a>
+            </li>
+          {% else %}
+            <li class="page-item active">
+              <span class="page-link"> {{ page }} <span class="sr-only">(current)</span> </span>
+            </li>
+          {% endif %}
+        {% else %}
+          <li class="page-item"> <span class="page-link ellipsis">…</span> </li>
+        {% endif %}
+      {%- endfor %}
+      {% if pagination.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="{{ url_for_index_page(pagination.page + 1) }}">Next &raquo;</a>
+        </li>
+      {% endif %}
+    </ul>
+  </nav>
+{% endmacro %}
