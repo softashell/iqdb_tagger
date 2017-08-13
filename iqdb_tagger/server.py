@@ -5,8 +5,8 @@ from math import ceil
 
 from flask import (
     abort,
-    Flask,
     flash,
+    Flask,
     redirect,
     render_template,
     request,
@@ -41,24 +41,29 @@ class Pagination(object):
     """Pagination object."""
 
     def __init__(self, page, per_page, total_count):
+        """Init method."""
         self.page = page
         self.per_page = per_page
         self.total_count = total_count
 
     @property
     def pages(self):
+        """Get pages."""
         return int(ceil(self.total_count / float(self.per_page)))
 
     @property
     def has_prev(self):
+        """Check if it have previous page."""
         return self.page > 1
 
     @property
     def has_next(self):
+        """Check if it have next page."""
         return self.page < self.pages
 
     def iter_pages(
             self, left_edge=2, left_current=2, right_current=5, right_edge=2):
+        """Iterate pages."""
         last = 0
         for num in range(1, self.pages + 1):
             if num <= left_edge or (
@@ -136,6 +141,7 @@ def index(page):
 
 
 def url_for_index_page(page):
+    """Get url for index page."""
     args = request.view_args.copy()
     args['page'] = page
     return url_for(request.endpoint, **args)
