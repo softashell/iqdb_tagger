@@ -4,15 +4,17 @@ import os
 from math import ceil
 
 from flask import (
+    Flask,
     abort,
     flash,
-    Flask,
     redirect,
     render_template,
     request,
     send_from_directory,
     url_for
 )
+from werkzeug.utils import secure_filename
+
 from iqdb_tagger.__main__ import (
     DEFAULT_PLACE,
     get_page_result,
@@ -26,7 +28,6 @@ from iqdb_tagger.models import (
     init_db
 )
 from iqdb_tagger.utils import default_db_path, thumb_folder, user_data_dir
-from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
