@@ -82,6 +82,8 @@ class Pagination(object):
 @app.route('/page/<int:page>')
 def index(page):
     """Get index page."""
+    if not os.path.isdir(user_data_dir):
+        os.makedirs(user_data_dir, exist_ok=True)
     if request.method == 'POST':
         # check if the post request has the file part
         if 'file' not in request.files:

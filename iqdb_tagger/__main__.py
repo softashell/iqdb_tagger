@@ -213,6 +213,8 @@ def main(
     db_path=None, html_dump=False, place=DEFAULT_PLACE
 ):
     """Get similar image from iqdb."""
+    if not os.path.isdir(user_data_dir):
+        os.makedirs(user_data_dir, exist_ok=True)
     if db_path is None:
         db_path = default_db_path
     models.init_db(db_path, db_version)
