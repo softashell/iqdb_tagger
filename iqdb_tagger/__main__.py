@@ -18,7 +18,6 @@ from iqdb_tagger.__init__ import db_version
 from iqdb_tagger.utils import default_db_path, thumb_folder, user_data_dir
 
 db = '~/images/! tagged'
-size = 200, 200
 DEFAULT_SIZE = 150, 150
 DEFAULT_PLACE = 'iqdb'
 minsim = 75
@@ -148,9 +147,9 @@ class ImageMatcher:
         if not os.path.isdir(self.thumbnail_folder):
             os.makedirs(self.thumbnail_folder, exist_ok=True)
         if not os.path.isfile(self.thumb_path):
-            size = (300, 300)
+            thumb_size = (300, 300)
             im = Image.open(self.image)
-            im.thumbnail(size, Image.ANTIALIAS)
+            im.thumbnail(thumb_size, Image.ANTIALIAS)
             im.save(self.thumb_path)
         return self.thumb_path
 
@@ -170,7 +169,7 @@ class ImageMatcher:
             for item_tag in item['tags']:
                 m_tag = models.Tag(name=item_tag)
                 m_tag.save()
-                match_tag = models.MatchTag(match=mr, tag=m_tag)
+                match_tag = models.TagRelationship(match=mr, tag=m_tag)
                 match_tag.save()
 
 
@@ -262,7 +261,7 @@ def get_tags(image):
     print('Getting tags for %s' % name)
 
     im = Image.open(image)
-    im.thumbnail(size, Image.ANTIALIAS)
+    im.thumbnail(DEFAULT_SIZE, Image.ANTIALIAS)
     im.save(thumb, 'JPEG')
 
     class Browser:
@@ -333,7 +332,3 @@ def parse_dir(path):
             if re.search('\.(png|jpg|jpeg)$', file):
                 file = os.path.join(root, file)
                 get_tags(file)
-
-
-if __name__ == '__main__':
-    main()
