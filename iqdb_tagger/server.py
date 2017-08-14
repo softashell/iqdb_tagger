@@ -3,6 +3,7 @@
 """server module."""
 import os
 from math import ceil
+from tempfile import gettempdir
 
 from flask import (
     Flask,
@@ -14,6 +15,7 @@ from flask import (
     send_from_directory,
     url_for
 )
+import structlog
 from werkzeug.utils import secure_filename
 
 from iqdb_tagger.__main__ import (
@@ -31,6 +33,7 @@ from iqdb_tagger.models import (
 from iqdb_tagger.utils import default_db_path, thumb_folder, user_data_dir
 
 app = Flask(__name__)
+log = structlog.getLogger()
 
 
 @app.route('/thumb/<path:basename>')
@@ -96,11 +99,10 @@ def index(page):
             flash('No selected file')
             return redirect(request.url)
         if file:
-            upload_folder = os.path.join(user_data_dir, 'upload')
-            if not os.path.exists(upload_folder):
-                os.makedirs(upload_folder)
+            upload_folder = gettempdir()
             filename = os.path.join(
                 upload_folder, secure_filename(file.filename))
+            log.debug('file saved', p=filename)
             file.save(filename)
         else:
             flash('Error uploading file.')
