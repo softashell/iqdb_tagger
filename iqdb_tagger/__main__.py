@@ -63,6 +63,7 @@ def get_posted_image(img_path, resize=False, size=None):
         if resized_thumb_rel is not None else img
 
 
+@click.command()
 @click.option(
     '--place', type=click.Choice(['iqdb', 'danbooru']),
     default=DEFAULT_PLACE,
