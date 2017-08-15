@@ -63,25 +63,18 @@ def get_posted_image(img_path, resize=False, size=None):
         if resized_thumb_rel is not None else img
 
 
-@click.command()
-@click.option(
-    '--show-mode',
-    type=click.Choice(['best-match', 'match', 'others', 'all']),
-    default='match', help='Show mode, default:match'
-)
 @click.option(
     '--place', type=click.Choice(['iqdb', 'danbooru']),
     default=DEFAULT_PLACE,
     help='Specify iqdb place, default:{}'.format(DEFAULT_PLACE)
 )
-@click.option('--pager/--no-pager', default=False, help='Use Pager.')
 @click.option('--resize', is_flag=True, help='Use resized image.')
 @click.option('--size', is_flag=True, help='Specify resized image.')
 @click.option('--db-path', help='Specify Database path.')
 @click.option('--html-dump', is_flag=True, help='Dump html for debugging')
 @click.argument('image')
 def main(
-    image, show_mode='match', pager=False, resize=False, size=None,
+    image, resize=False, size=None,
     db_path=None, html_dump=False, place=DEFAULT_PLACE
 ):
     """Get similar image from iqdb."""
