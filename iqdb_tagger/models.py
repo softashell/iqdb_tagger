@@ -252,7 +252,7 @@ class ImageMatch(BaseModel):
             assert len(a_tags) < 3
             if len(a_tags) == 2:
                 additional_res = res
-                assert additional_res['href'] == \
+                additional_res['href'] = \
                     a_tags[1].attrs.get('href', None)
                 yield additional_res
             yield res
