@@ -5,6 +5,7 @@ import os
 from math import ceil
 from tempfile import gettempdir
 
+import structlog
 from flask import (
     Flask,
     abort,
@@ -15,7 +16,6 @@ from flask import (
     send_from_directory,
     url_for
 )
-import structlog
 from werkzeug.utils import secure_filename
 
 from iqdb_tagger.__main__ import (
