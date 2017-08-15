@@ -35,7 +35,7 @@
     <div class="card-group">
       {% for imr in imr_group %}
         <div class="card col-lg-2" id="imr-{{imr.id}}">
-          <a class="mx-auto" href="{{imr.match_result.link}}">
+          <a data-netloc="{{imr.match_result.link_netloc|replace('.', '-')}}" data-status="{{imr.imagematch_set[0].status_verbose|lower|replace(' ', '-')}}" class="mx-auto " href="{{imr.match_result.link}}">
             <img class="card-img-top" src="{{imr.match_result.iqdb_thumb}}">
           </a>
           <div class="card-block">
