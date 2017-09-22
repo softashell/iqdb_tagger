@@ -22,6 +22,7 @@ from iqdb_tagger.__main__ import (
     DEFAULT_PLACE,
     get_page_result,
     get_posted_image,
+    init_program,
     iqdb_url_dict
 )
 from iqdb_tagger.models import (
@@ -31,6 +32,8 @@ from iqdb_tagger.models import (
     init_db
 )
 from iqdb_tagger.utils import default_db_path, thumb_folder, user_data_dir
+
+import click
 
 app = Flask(__name__)
 log = structlog.getLogger()
@@ -161,10 +164,28 @@ def match_sha256(checksum):
     return render_template('match.html', entry=entry)
 
 
-def main():
-    """Run main func."""
+@click.group()
+def cli():
+    pass
+
+@cli.command()
+def init():
+    """init program."""
+    init_program()
+    
+
+@cli.command()
+@click.option('--debug/--no-debug', default=False)
+def start(debug):
+    """Start server."""
+    # compatibility
     app.jinja_env.globals['url_for_index_page'] = url_for_index_page
-    app.run(debug=True)
+    app.run(debug=debug)
+
+
+def main():
+    """Run main function."""
+    cli()
 
 
 if __name__ == '__main__':

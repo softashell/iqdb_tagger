@@ -63,6 +63,23 @@ def get_posted_image(img_path, resize=False, size=None):
         if resized_thumb_rel is not None else img
 
 
+def init_program(db_path=None):
+    """init program."""
+    # create user data dir
+    if not os.path.isdir(user_data_dir):
+        os.makedirs(user_data_dir, exist_ok=True)
+        log.debug('User data dir created.')
+    # create thumbnail folder
+    if not os.path.isdir(thumb_folder):
+        os.makedirs(thumb_folder, exist_ok=True)
+        log.debug('Thumbnail folder created.')
+
+    # database
+    if db_path is None:
+        db_path = default_db_path
+    models.init_db(db_path, db_version)
+
+
 @click.command()
 @click.option(
     '--place', type=click.Choice(['iqdb', 'danbooru']),
@@ -79,11 +96,7 @@ def main(
     db_path=None, html_dump=False, place=DEFAULT_PLACE
 ):
     """Get similar image from iqdb."""
-    if not os.path.isdir(user_data_dir):
-        os.makedirs(user_data_dir, exist_ok=True)
-    if db_path is None:
-        db_path = default_db_path
-    models.init_db(db_path, db_version)
+    init_program(db_path)
     post_img = get_posted_image(img_path=image, resize=resize, size=size)
     url, im_place = iqdb_url_dict[place]
     page = get_page_result(image=post_img.path, url=url)
