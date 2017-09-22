@@ -316,7 +316,7 @@ class ThumbnailRelationship(BaseModel):
         thumb_path = '{}-{}-{}.jpg'.format(image.checksum, size[0], size[1])
         if thumb_folder:
             thumb_path = os.path.join(thumb_folder, thumb_path)
-        if not os.path.isfile(thumb_path):
+        if not os.path.isfile(thumb_path) or os.path.getsize(thumb_path) == 0:
             im = Image.open(image.path)
             im.thumbnail(size, Image.ANTIALIAS)
             try:

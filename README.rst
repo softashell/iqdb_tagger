@@ -60,6 +60,7 @@ CHANGELOG
 - change the way server start. run init subcommand first before start the server
 - fix pillow error. Install pillow if error stil raised.
 - fix png upload error.
+- fix OSError when thumbnail is an empty file.
 
 0.0.1
 `````
