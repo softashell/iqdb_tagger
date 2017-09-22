@@ -46,19 +46,27 @@ def get_page_result(image, url):
     return br.get_current_page()
 
 
-def get_posted_image(img_path, resize=False, size=None):
+def get_posted_image(img_path, resize=False, size=None, output_thumb_folder=None):
     """Get posted image."""
+    if output_thumb_folder is None:
+        output_thumb_folder = thumb_folder
+
     img, _ = models.ImageModel.get_or_create_from_path(img_path)
     def_thumb_rel, _ = models.ThumbnailRelationship.get_or_create_from_image(
-        image=img, thumb_folder=thumb_folder, size=DEFAULT_SIZE)
+        image=img, thumb_folder=output_thumb_folder, size=DEFAULT_SIZE)
     resized_thumb_rel = None
+
     if resize and size:
         resized_thumb_rel, _ = \
             models.ThumbnailRelationship.get_or_create_from_image(
-                image=img, thumb_folder=thumb_folder, size=size
+                image=img, thumb_folder=output_thumb_folder, size=size
             )
     elif resize:
+        # use thumbnail if no size is given
         resized_thumb_rel = def_thumb_rel
+    else:
+        log.debug('Unknown config.', resize=resize, size=size)
+
     return resized_thumb_rel.thumbnail \
         if resized_thumb_rel is not None else img
 

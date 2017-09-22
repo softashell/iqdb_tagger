@@ -319,7 +319,15 @@ class ThumbnailRelationship(BaseModel):
         if not os.path.isfile(thumb_path):
             im = Image.open(image.path)
             im.thumbnail(size, Image.ANTIALIAS)
-            im.save(thumb_path, 'JPEG')
+            try:
+                im.save(thumb_path, 'JPEG')
+            except OSError as e:
+                if str(e) == 'cannot write mode RGBA as JPEG':
+                    log.debug('Converting image from RGBA to JPEG')
+                    im = im.convert('RGB')
+                    im.save(thumb_path, 'JPEG')
+                else:
+                    raise e
         thumb, _ = ImageModel.get_or_create_from_path(thumb_path)
         return ThumbnailRelationship.get_or_create(
             original=image, thumbnail=thumb)
