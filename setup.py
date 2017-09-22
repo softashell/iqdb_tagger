@@ -20,6 +20,7 @@ install_requires = [
     'lxml>=3.8.0',
     'MechanicalSoup>=0.7.0',
     'peewee>=2.10.1',
+    'Pillow>=4.2.1',
     'structlog>=17.2.0',
 ]
 
