@@ -23,10 +23,10 @@ Usage
 
 Use as Hydrus iqdb script server
 ````````````````````````````````
-
-1. Run *iqdb-tagger-server* and note the server address.
-2. Import parsing script below to Hydrus parsing scripts.
-3. Check the server address and edit it as needed.
+1. Run :bash:`iqdb-tagger-server init` when you run the server for first time.
+2. Run :bash:`iqdb-tagger-server start` and note the server address.
+3. Import parsing script below to Hydrus parsing scripts.
+4. Check the server address and edit it as needed.
 
 .. code:: json
 
@@ -50,6 +50,19 @@ Or clone the repo:
 
     $ git clone https://github.com/rachmadaniHaryono/iqdb_tagger.git
     $ python setup.py install
+
+CHANGELOG
+---------
+
+0.1.0 (TBA)
+```````````
+
+- change the way server start. run init subcommand first before start the server
+- fix pillow error. Install pillow if error stil raised.
+
+0.0.1
+`````
+- Program created
 
 FAQ
 ---
