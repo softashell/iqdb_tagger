@@ -23,8 +23,8 @@ Usage
 
 Use as Hydrus iqdb script server
 ````````````````````````````````
-1. Run :bash:`iqdb-tagger-server init` when you run the server for first time.
-2. Run :bash:`iqdb-tagger-server start` and note the server address.
+1. Run :code:`iqdb-tagger-server init` when you run the server for first time.
+2. Run :code:`iqdb-tagger-server start` and note the server address.
 3. Import parsing script below to Hydrus parsing scripts.
 4. Check the server address and edit it as needed.
 
