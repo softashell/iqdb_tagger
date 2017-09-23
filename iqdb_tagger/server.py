@@ -172,7 +172,7 @@ def cli():
 def init():
     """init program."""
     init_program()
-    
+
 
 @cli.command()
 @click.option('--debug/--no-debug', default=False)
