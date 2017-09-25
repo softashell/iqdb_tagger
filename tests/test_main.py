@@ -1,20 +1,14 @@
 """test module."""
 import os
 
-from iqdb_tagger.__main__ import (
-    get_posted_image,
-    init_program,
-)
-from iqdb_tagger.models import (
-    ImageModel,
-    ThumbnailRelationship,
-)
-
-
 from PIL import Image
+
+from iqdb_tagger.__main__ import get_posted_image, init_program
+from iqdb_tagger.models import ImageModel, ThumbnailRelationship
 
 
 def test_rgba_on_get_posted_image(tmpdir):
+    """Test method."""
     db_path = tmpdir.join('temp_db.db')
     init_program(db_path=db_path.strpath)
     rgba_file = tmpdir.join('file.png')
@@ -28,6 +22,7 @@ def test_rgba_on_get_posted_image(tmpdir):
 def test_empty_file_when_get_posted_image(
         tmpdir
 ):
+    """Test method."""
     db_path = tmpdir.join('temp_db.db')
     init_program(db_path=db_path.strpath)
     thumb_folder = tmpdir.mkdir('thumb')
