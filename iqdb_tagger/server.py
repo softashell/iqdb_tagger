@@ -34,6 +34,7 @@ from iqdb_tagger.models import (
 from iqdb_tagger.utils import default_db_path, thumb_folder, user_data_dir
 
 import click
+from requests.exceptions import ConnectionError
 
 app = Flask(__name__)
 log = structlog.getLogger()
@@ -128,7 +129,12 @@ def index(page):
             .select().join(ImageMatch) \
             .where(ImageMatch.search_place == im_place)
         if not query.exists():
-            result_page = get_page_result(image=posted_img.path, url=url)
+            try:
+                result_page = get_page_result(image=posted_img.path, url=url)
+            except ConnectionError as e:
+                log.error(str(e))
+                flash('Connection error.')
+                return redirect(request.url)
             list(ImageMatch.get_or_create_from_page(
                 page=result_page, image=posted_img, place=im_place))
         return redirect(url_for('match_sha256', checksum=posted_img.checksum))
