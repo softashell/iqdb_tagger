@@ -5,6 +5,8 @@ import os
 from math import ceil
 from tempfile import gettempdir
 
+import click
+import requests
 import structlog
 from flask import (
     Flask,
@@ -32,9 +34,6 @@ from iqdb_tagger.models import (
     init_db
 )
 from iqdb_tagger.utils import default_db_path, thumb_folder, user_data_dir
-
-import click
-from requests.exceptions import ConnectionError
 
 app = Flask(__name__)
 log = structlog.getLogger()
@@ -131,7 +130,7 @@ def index(page):
         if not query.exists():
             try:
                 result_page = get_page_result(image=posted_img.path, url=url)
-            except ConnectionError as e:
+            except requests.exceptions.ConnectionError as e:
                 log.error(str(e))
                 flash('Connection error.')
                 return redirect(request.url)
@@ -172,11 +171,13 @@ def match_sha256(checksum):
 
 @click.group()
 def cli():
+    """CLI func."""
     pass
+
 
 @cli.command()
 def init():
-    """init program."""
+    """Init program."""
     init_program()
 
 

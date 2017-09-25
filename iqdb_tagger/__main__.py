@@ -46,7 +46,8 @@ def get_page_result(image, url):
     return br.get_current_page()
 
 
-def get_posted_image(img_path, resize=False, size=None, output_thumb_folder=None):
+def get_posted_image(
+        img_path, resize=False, size=None, output_thumb_folder=None):
     """Get posted image."""
     if output_thumb_folder is None:
         output_thumb_folder = thumb_folder
@@ -72,7 +73,7 @@ def get_posted_image(img_path, resize=False, size=None, output_thumb_folder=None
 
 
 def init_program(db_path=None):
-    """init program."""
+    """Init program."""
     # create user data dir
     if not os.path.isdir(user_data_dir):
         os.makedirs(user_data_dir, exist_ok=True)
