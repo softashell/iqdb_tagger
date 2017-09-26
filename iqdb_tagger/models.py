@@ -56,6 +56,18 @@ class Tag(BaseModel):
             return self.namespace + ':' + self.name
         return self.name
 
+    @property
+    def cleaned_name(self):
+        """Get cleaned name."""
+        name = self.name
+        name_startwith_colon = name.startswith(':')
+        while(name_startwith_colon):
+            if name.startswith(':'):
+                name = name[1:]
+            else:
+                name_startwith_colon = False
+        return name
+
 
 class Match(BaseModel):
     """Match model."""
