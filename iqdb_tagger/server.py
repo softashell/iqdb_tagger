@@ -5,7 +5,9 @@ import os
 from math import ceil
 from tempfile import gettempdir
 
+import cfscrape
 import click
+import mechanicalsoup
 import requests
 import structlog
 from flask import (
@@ -24,6 +26,7 @@ from iqdb_tagger.__main__ import (
     DEFAULT_PLACE,
     get_page_result,
     get_posted_image,
+    get_tags,
     init_program,
     iqdb_url_dict
 )
@@ -31,6 +34,7 @@ from iqdb_tagger.models import (
     ImageMatch,
     ImageMatchRelationship,
     ImageModel,
+    MatchTagRelationship,
     init_db
 )
 from iqdb_tagger.utils import default_db_path, thumb_folder, user_data_dir
@@ -167,6 +171,32 @@ def match_sha256(checksum):
     init_db()
     entry = ImageModel.get(ImageModel.checksum == checksum)
     return render_template('match.html', entry=entry)
+
+
+@app.route('/match/d/<pair_id>', methods=['GET'])
+def single_match_detail(pair_id):
+    """Show single match pair."""
+    init_db()
+    nocache = False
+    entry = ImageMatchRelationship.get(ImageMatchRelationship.id == pair_id)
+
+    match_result = entry.match_result
+    mt_rel = MatchTagRelationship.select().where(
+        MatchTagRelationship.match == match_result)
+    tags = [x.tag.full_name for x in mt_rel]
+
+    # init browser and scraper
+    br = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
+    br.raise_on_404 = True
+    scraper = cfscrape.CloudflareScraper()
+
+    if not tags or nocache:
+        try:
+            get_tags(br, scraper, match_result)
+        except requests.exceptions.ConnectionError as e:
+            log.error(str(e), url=match_result.link)
+
+    return render_template('single_match.html', entry=entry)
 
 
 @click.group()
