@@ -11,9 +11,10 @@ def get_tags(page, url, scraper=None):
     url is used as hint to choose which parser will be used.
     """
     parser = [
-        YandereParser,
         ChanSankakuParser,
+        DanbooruParser,
         GelbooruParser,
+        YandereParser,
         ZerochanParser,
     ]
     log.debug('url', url=url)
@@ -162,3 +163,36 @@ class ZerochanParser(CustomParser):
             except TypeError as e:
                 log.error(str(e), tag_text=tag)
                 yield ''
+
+
+class DanbooruParser(CustomParser):
+    """Parser for danbooru."""
+
+    @staticmethod
+    def is_url(url):
+        """Check url."""
+        if 'danbooru.donmai.us/posts/' in url:
+
+            return True
+        return False
+
+    def get_tags(self):
+        """Get tags."""
+        page = self.page
+        classname_to_namespace_dict = {
+            'category-0': '',
+            'category-1': 'creator',
+            'category-2': 'meta',
+            'category-3': 'series',
+            'category-4': 'character',
+            'category-5': 'meta',
+            'category-6': 'meta',
+            'category-7': 'meta',
+        }
+        for key, value in classname_to_namespace_dict.items():
+            for item in page.select('li.{}'.format(key)):
+                if value:
+                    value = value + ':'
+                text = item.text.rsplit(' ', 1)[0].split(' ', 1)[1].strip()
+                result = value + text
+                yield result
