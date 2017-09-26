@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """main module."""
 import os
-import time
 
 import cfscrape
 import click
