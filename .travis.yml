@@ -5,10 +5,10 @@ python:
 before_install:
   - "pip install -r requirements-dev.txt"
 install:
-  - find . -iname "*.py" -and -not -path './.tox/*' -and -not -path './docs/*' | xargs pylint --rcfile=.pylintrc
   - "pip install -e ."
   - "pip install -r requirements.txt"
 addons:
 script:
+  - find . -iname "*.py" -and -not -path './.tox/*' -and -not -path './docs/*' | xargs pylint --rcfile=.pylintrc
   - python -m flake8
   - python3 -m pytest .
