@@ -14,6 +14,7 @@ with open(path.join(here, 'README.rst')) as f:
 install_requires = [
     'appdirs>=1.4.3',
     'beautifulsoup4>=4.6.0',
+    'cfscrape==1.9.0',
     'click>=6.7',
     'Flask>=0.12.2',
     'funclog>=0.3.0',
