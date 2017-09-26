@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """main module."""
 import os
-import time
 
 import cfscrape
 import click
@@ -12,8 +11,8 @@ import structlog
 
 from iqdb_tagger import models
 from iqdb_tagger.__init__ import db_version
+from iqdb_tagger.custom_parser import get_tags as get_tags_from_parser
 from iqdb_tagger.utils import default_db_path, thumb_folder, user_data_dir
-from iqdb_tagger.custom_parser import get_tags
 
 db = '~/images/! tagged'
 DEFAULT_SIZE = 150, 150
@@ -92,22 +91,48 @@ def init_program(db_path=None):
     models.init_db(db_path, db_version)
 
 
+def get_tags(browser, url, scraper, match_result):
+    """Get tags."""
+    # compatibility
+    br = browser
+
+    br.open(url)
+    page = br.get_current_page()
+    tags = get_tags_from_parser(page, url, scraper)
+    if tags:
+        for tag in tags:
+            tag_parts = tag.split(':', 1)
+            if ':' in tag:
+                tag_name = tag_parts[1]
+                namespace = tag_parts[0]
+            else:
+                tag_name = tag_parts[0]
+                namespace = None
+            tag_model, _ = models.Tag.get_or_create(
+                name=tag_name, namespace=namespace)
+            models.MatchTagRelationship.get_or_create(
+                match=match_result, tag=tag_model)
+        return tags
+    else:
+        log.debug('No tags found.')
+
+
 @click.command()
 @click.option(
     '--place', type=click.Choice(['iqdb', 'danbooru']),
-    default=DEFAULT_PLACE, help='Specify iqdb place, default:{}'.format(DEFAULT_PLACE)
+    default=DEFAULT_PLACE,
+    help='Specify iqdb place, default:{}'.format(DEFAULT_PLACE)
 )
 @click.option('--resize', is_flag=True, help='Use resized image.')
 @click.option('--size', is_flag=True, help='Specify resized image.')
 @click.option('--db-path', help='Specify Database path.')
-@click.option('--html-dump', is_flag=True, help='Dump html for debugging')
 @click.option(
     '--match-filter', type=click.Choice(['default', 'best-match']),
     default='default', help='Filter the result.')
 @click.argument('image')
 def main(
     image, resize=False, size=None,
-    db_path=None, html_dump=False, place=DEFAULT_PLACE, match_filter='default'
+    db_path=None, place=DEFAULT_PLACE, match_filter='default'
 ):
     """Get similar image from iqdb."""
     init_program(db_path)
@@ -128,32 +153,22 @@ def main(
     for item in result:
         match_result = item.match.match_result
         url = match_result.link
-        res = MatchTagRelationship.select().where(MatchTagRelationship.match == match_result)
-        tags = [x.tag.full_name for x in res]
-        if not tags:
-            try:
-                br.open(url)
-                page = br.get_current_page()
-                tags = get_tags(page, url, scraper)
-                if tags:
-                    for tag in tags:
-                        tag_parts = tag.split(':', 1)
-                        if ':' in tag:
-                            tag_name = tag_parts[1]
-                            namespace = tag_parts[0]
-                        else:
-                            tag_name = tag_parts[0]
-                            namespace = None
-                        tag_model, _ = models.Tag.get_or_create(
-                            name=tag_name, namespace=namespace)
-                        MatchTagRelationship.get_or_create(match=match_result, tag=tag_model)
-                    print('\n'.join(tags))
-                else:
-                    log.debug('No tags found.')
-            except requests.exceptions.ConnectionError as e:
-                log.error(str(e), url=url)
-        else:
-            print('\n'.join(tags))
+
         print('{}|{}|{}'.format(
             item.similarity, item.status_verbose, url
         ))
+
+        res = MatchTagRelationship.select().where(
+            MatchTagRelationship.match == match_result)
+        tags = [x.tag.full_name for x in res]
+
+        if not tags:
+            try:
+                tags = get_tags(br, url, scraper, match_result)
+            except requests.exceptions.ConnectionError as e:
+                log.error(str(e), url=url)
+        if tags:
+            print('\n'.join(tags))
+        else:
+            log.debug('No tags found.')
+        print('\n')

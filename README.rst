@@ -58,6 +58,7 @@ CHANGELOG
 ```````````
 
 - change the way server start. run init subcommand first before start the server
+- remove :code:`html-dump argument`.
 - fix pillow error. Install pillow if error stil raised.
 - fix png upload error.
 - fix OSError when thumbnail is an empty file.
