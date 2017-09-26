@@ -66,10 +66,8 @@ class YandereParser(CustomParser):
         }
         for key, value in classname_to_namespace_dict.items():
             for item in page.select('li.{}'.format(key)):
-                if value:
-                    value = value + ':'
                 text = item.text.strip().split(' ', 1)[1].rsplit(' ', 1)[0]
-                yield value + text
+                yield (value, text)
 
 
 class ChanSankakuParser(CustomParser):
@@ -92,11 +90,10 @@ class ChanSankakuParser(CustomParser):
             'tag-type-meta': 'meta',
             'tag-type-general': ''
         }
-        for key, value in classname_to_namespace_dict.items():
+        for key, namespace in classname_to_namespace_dict.items():
             for item in page.select('li.{}'.format(key)):
-                if value:
-                    value = value + ':'
-                yield value + item.text.rsplit('(?)', 1)[0].strip()
+                name = item.text.rsplit('(?)', 1)[0].strip()
+                yield (namespace, name)
 
     def get_tags(self):
         """Get tags."""
@@ -134,11 +131,8 @@ class GelbooruParser(CustomParser):
         }
         for key, value in classname_to_namespace_dict.items():
             for item in page.select('li.{}'.format(key)):
-                if value:
-                    value = value + ':'
                 text = item.text.rsplit(' ', 1)[0].split(' ', 1)[1].strip()
-                result = value + text
-                yield result
+                yield(value, text)
 
 
 class ZerochanParser(CustomParser):
@@ -158,11 +152,10 @@ class ZerochanParser(CustomParser):
         for tag in tags:
             try:
                 tag_text, namespace = tag.text.rsplit(' ', 1)
-                result = namespace + ':' + tag_text.strip()
-                yield result
+                yield (namespace, tag_text)
             except TypeError as e:
                 log.error(str(e), tag_text=tag)
-                yield ''
+                yield ('', '')
 
 
 class DanbooruParser(CustomParser):
@@ -191,8 +184,5 @@ class DanbooruParser(CustomParser):
         }
         for key, value in classname_to_namespace_dict.items():
             for item in page.select('li.{}'.format(key)):
-                if value:
-                    value = value + ':'
                 text = item.text.rsplit(' ', 1)[0].split(' ', 1)[1].strip()
-                result = value + text
-                yield result
+                yield value, text

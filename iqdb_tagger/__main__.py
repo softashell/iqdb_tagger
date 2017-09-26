@@ -91,23 +91,18 @@ def init_program(db_path=None):
     models.init_db(db_path, db_version)
 
 
-def get_tags(browser, url, scraper, match_result):
+def get_tags(browser, scraper, match_result):
     """Get tags."""
     # compatibility
     br = browser
 
+    url = match_result.link
     br.open(url, timeout=10)
     page = br.get_current_page()
     tags = get_tags_from_parser(page, url, scraper)
     if tags:
         for tag in tags:
-            tag_parts = tag.split(':', 1)
-            if ':' in tag:
-                tag_name = tag_parts[1]
-                namespace = tag_parts[0]
-            else:
-                tag_name = tag_parts[0]
-                namespace = None
+            namespace, tag_name = tag
             tag_model, _ = models.Tag.get_or_create(
                 name=tag_name, namespace=namespace)
             models.MatchTagRelationship.get_or_create(
@@ -175,7 +170,7 @@ def main(
 
         if not tags:
             try:
-                tags = get_tags(br, url, scraper, match_result)
+                tags = get_tags(br, scraper, match_result)
             except requests.exceptions.ConnectionError as e:
                 log.error(str(e), url=url)
         if tags:
