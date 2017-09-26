@@ -99,6 +99,20 @@ class Match(BaseModel):
                 netloc = netloc.split(ending, 1)[0]
         return netloc
 
+    @property
+    def tags_from_img_alt(self):
+        """Get readable tag from image alt."""
+        result = []
+        img_alt = self.img_alt[0]
+        non_tags_txt = img_alt.split('Tags:')[0]
+        tags_txt = img_alt.split('Tags:')[1]
+        result.extend(tags_txt.split(' '))
+        non_tags_txt.split('Score:')
+        result.append(non_tags_txt.split('Score:')[0])
+        result.append('Score:'+ non_tags_txt.split('Score:')[1])
+        result = [x.strip() for x in result if x]
+        return result
+
 
 class MatchTagRelationship(BaseModel):
     """match tag relationship."""

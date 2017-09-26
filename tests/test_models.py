@@ -43,3 +43,20 @@ def test_thumbnail_rel_get_or_create_existing_thumbnail(tmpdir):
     res2 = models.ThumbnailRelationship.get_or_create_from_image(
         img, size=(150, 150))
     assert not res2[1]
+
+def test_tags_from_img_alt():
+    """test method."""
+    m1 = models.Match()
+    m1.img_alt = [
+        'Rating: e Score: 5 Tags: '
+        'dungeon_ni_deai_wo_motomeru_no_wa_machigatteiru_darou_ka '
+        'hestia_(dungeon)'
+    ]
+
+    exp_result = [
+        'Rating: e',
+        'Score: 5',
+        'dungeon_ni_deai_wo_motomeru_no_wa_machigatteiru_darou_ka',
+        'hestia_(dungeon)',
+    ]
+    assert set(m1.tags_from_img_alt) == set(exp_result)
