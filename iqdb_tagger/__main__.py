@@ -91,7 +91,7 @@ def init_program(db_path=None):
     models.init_db(db_path, db_version)
 
 
-def get_tags(browser, url, scraper):
+def get_tags(browser, url, scraper, match_result):
     """Get tags."""
     # compatibility
     br = browser
@@ -110,7 +110,8 @@ def get_tags(browser, url, scraper):
                 namespace = None
             tag_model, _ = models.Tag.get_or_create(
                 name=tag_name, namespace=namespace)
-            MatchTagRelationship.get_or_create(match=match_result, tag=tag_model)
+            models.MatchTagRelationship.get_or_create(
+                match=match_result, tag=tag_model)
         return tags
     else:
         log.debug('No tags found.')
@@ -156,11 +157,13 @@ def main(
             item.similarity, item.status_verbose, url
         ))
 
-        res = MatchTagRelationship.select().where(MatchTagRelationship.match == match_result)
+        res = models.MatchTagRelationship.select().where(
+            models.MatchTagRelationship.match == match_result)
         tags = [x.tag.full_name for x in res]
+
         if not tags:
             try:
-                tags = get_tags(br, url, scraper)
+                tags = get_tags(br, url, scraper, match_result)
             except requests.exceptions.ConnectionError as e:
                 log.error(str(e), url=url)
         if tags:
