@@ -125,14 +125,13 @@ def get_tags(browser, url, scraper):
 @click.option('--resize', is_flag=True, help='Use resized image.')
 @click.option('--size', is_flag=True, help='Specify resized image.')
 @click.option('--db-path', help='Specify Database path.')
-@click.option('--html-dump', is_flag=True, help='Dump html for debugging')
 @click.option(
     '--match-filter', type=click.Choice(['default', 'best-match']),
     default='default', help='Filter the result.')
 @click.argument('image')
 def main(
     image, resize=False, size=None,
-    db_path=None, html_dump=False, place=DEFAULT_PLACE, match_filter='default'
+    db_path=None, place=DEFAULT_PLACE, match_filter='default'
 ):
     """Get similar image from iqdb."""
     init_program(db_path)
