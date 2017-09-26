@@ -12,7 +12,7 @@ import structlog
 from iqdb_tagger import models
 from iqdb_tagger.__init__ import db_version
 from iqdb_tagger.utils import default_db_path, thumb_folder, user_data_dir
-from iqdb_tagger.custom_parser import get_tags
+from iqdb_tagger.custom_parser import get_tags as get_tags_from_parser
 
 db = '~/images/! tagged'
 DEFAULT_SIZE = 150, 150
@@ -98,7 +98,7 @@ def get_tags(browser, url, scraper, match_result):
 
     br.open(url)
     page = br.get_current_page()
-    tags = get_tags(page, url, scraper)
+    tags = get_tags_from_parser(page, url, scraper)
     if tags:
         for tag in tags:
             tag_parts = tag.split(':', 1)
