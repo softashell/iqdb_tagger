@@ -157,8 +157,8 @@ def main(
             item.similarity, item.status_verbose, url
         ))
 
-        res = models.MatchTagRelationship.select().where(
-            models.MatchTagRelationship.match == match_result)
+        res = MatchTagRelationship.select().where(
+            MatchTagRelationship.match == match_result)
         tags = [x.tag.full_name for x in res]
 
         if not tags:
