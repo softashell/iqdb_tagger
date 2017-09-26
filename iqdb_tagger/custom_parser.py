@@ -135,7 +135,7 @@ class GelbooruParser(CustomParser):
             for item in page.select('li.{}'.format(key)):
                 if value:
                     value = value + ':'
-                result =  value + item.text.rsplit(' ', 1)[0].split(' ', 1)[1].strip()
+                result = value + item.text.rsplit(' ', 1)[0].split(' ', 1)[1].strip()
                 yield result
 
 
