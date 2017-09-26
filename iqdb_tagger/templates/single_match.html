@@ -1,0 +1,15 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class="container">
+<div id='main-image'><img src="{{url_for('thumb', basename=entry.image.path_basename)}}"></img></div>
+<div id='match-image'><img src="{{entry.match_result.iqdb_thumb}}"></img></div>
+<div id="tag-info">
+  <ul id="tag-info-list">
+      {% for mtr in entry.match_result.matchtagrelationship_set %}
+        <li class="tag-{{mtr.tag.namespace if mtr.tag.namespace else 'general'}}">{{mtr.tag.cleaned_name}}</li>
+      {% else %}
+        <li>No tags found.</li>
+      {% endfor %}
+  </ul>
+</div>
+{% endblock %}
