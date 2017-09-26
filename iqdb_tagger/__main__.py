@@ -110,9 +110,8 @@ def main(
     url, im_place = iqdb_url_dict[place]
     page = get_page_result(image=post_img.path, url=url)
     # if ok, will output: <Response [200]>
-    if html_dump:
-        timestr = time.strftime('%Y%m%d-%H%M%S') + '.html'
-        with open(timestr, 'w') as f:
-            f.write(str(page))
-    return list(models.ImageMatch.get_or_create_from_page(
+    result = list(models.ImageMatch.get_or_create_from_page(
         page=page, image=post_img, place=im_place))
+    result = [x[0] for x in result]
+    for item in result:
+        print('{}|{}'.format(item.similarity, item.match.match_result.link))
