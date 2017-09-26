@@ -96,7 +96,7 @@ def get_tags(browser, url, scraper, match_result):
     # compatibility
     br = browser
 
-    br.open(url)
+    br.open(url, timeout=10)
     page = br.get_current_page()
     tags = get_tags_from_parser(page, url, scraper)
     if tags:
@@ -137,12 +137,21 @@ def main(
     """Get similar image from iqdb."""
     init_program(db_path)
     post_img = get_posted_image(img_path=image, resize=resize, size=size)
-    url, im_place = iqdb_url_dict[place]
-    page = get_page_result(image=post_img.path, url=url)
-    # if ok, will output: <Response [200]>
-    result = list(models.ImageMatch.get_or_create_from_page(
-        page=page, image=post_img, place=im_place))
-    result = [x[0] for x in result]
+
+    result = []
+    for img_m_rel_set in post_img.imagematchrelationship_set:
+        for item_set in img_m_rel_set.imagematch_set:
+            if item_set.search_place_verbose == place:
+                result.append(item_set)
+
+    if not result:
+        url, im_place = iqdb_url_dict[place]
+        page = get_page_result(image=post_img.path, url=url)
+        # if ok, will output: <Response [200]>
+        result = list(models.ImageMatch.get_or_create_from_page(
+            page=page, image=post_img, place=im_place))
+        result = [x[0] for x in result]
+
     if match_filter == 'best-match':
         result = [x for x in result if x.status == x.STATUS_BEST_MATCH]
 
@@ -151,6 +160,8 @@ def main(
     scraper = cfscrape.CloudflareScraper()
     MatchTagRelationship = models.MatchTagRelationship
     for item in result:
+        # type item: models.ImageMatch
+        # type match_result: models.Match object
         match_result = item.match.match_result
         url = match_result.link
 
@@ -170,5 +181,5 @@ def main(
         if tags:
             print('\n'.join(tags))
         else:
-            log.debug('No tags found.')
+            log.debug('No printing tags.')
         print('\n')
