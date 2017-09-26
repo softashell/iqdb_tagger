@@ -92,6 +92,31 @@ def init_program(db_path=None):
     models.init_db(db_path, db_version)
 
 
+def get_tags(browser, url, scraper):
+    """Get tags."""
+    # compatibility
+    br = browser
+
+    br.open(url)
+    page = br.get_current_page()
+    tags = get_tags(page, url, scraper)
+    if tags:
+        for tag in tags:
+            tag_parts = tag.split(':', 1)
+            if ':' in tag:
+                tag_name = tag_parts[1]
+                namespace = tag_parts[0]
+            else:
+                tag_name = tag_parts[0]
+                namespace = None
+            tag_model, _ = models.Tag.get_or_create(
+                name=tag_name, namespace=namespace)
+            MatchTagRelationship.get_or_create(match=match_result, tag=tag_model)
+        return tags
+    else:
+        log.debug('No tags found.')
+
+
 @click.command()
 @click.option(
     '--place', type=click.Choice(['iqdb', 'danbooru']),
@@ -128,32 +153,20 @@ def main(
     for item in result:
         match_result = item.match.match_result
         url = match_result.link
+
+        print('{}|{}|{}'.format(
+            item.similarity, item.status_verbose, url
+        ))
+
         res = MatchTagRelationship.select().where(MatchTagRelationship.match == match_result)
         tags = [x.tag.full_name for x in res]
         if not tags:
             try:
-                br.open(url)
-                page = br.get_current_page()
-                tags = get_tags(page, url, scraper)
-                if tags:
-                    for tag in tags:
-                        tag_parts = tag.split(':', 1)
-                        if ':' in tag:
-                            tag_name = tag_parts[1]
-                            namespace = tag_parts[0]
-                        else:
-                            tag_name = tag_parts[0]
-                            namespace = None
-                        tag_model, _ = models.Tag.get_or_create(
-                            name=tag_name, namespace=namespace)
-                        MatchTagRelationship.get_or_create(match=match_result, tag=tag_model)
-                    print('\n'.join(tags))
-                else:
-                    log.debug('No tags found.')
+                tags = get_tags(br, url, scraper)
             except requests.exceptions.ConnectionError as e:
                 log.error(str(e), url=url)
-        else:
+        if tags:
             print('\n'.join(tags))
-        print('{}|{}|{}'.format(
-            item.similarity, item.status_verbose, url
-        ))
+        else:
+            log.debug('No tags found.')
+        print('\n')
