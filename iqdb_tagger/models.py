@@ -51,6 +51,7 @@ class Tag(BaseModel):
 
     @property
     def full_name(self):
+        """Get full name."""
         if self.namespace:
             return self.namespace + ':' + self.name
         return self.name
@@ -115,7 +116,7 @@ class Match(BaseModel):
         result.extend(tags_txt.split(' '))
         non_tags_txt.split('Score:')
         result.append(non_tags_txt.split('Score:')[0])
-        result.append('Score:'+ non_tags_txt.split('Score:')[1])
+        result.append('Score:' + non_tags_txt.split('Score:')[1])
         result = [x.strip() for x in result if x]
         return result
 

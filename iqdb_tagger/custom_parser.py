@@ -1,9 +1,9 @@
 """parser module."""
-import structlog
 import bs4
-
+import structlog
 
 log = structlog.getLogger()
+
 
 def get_tags(page, url, scraper=None):
     """Get tags by parsing page from the url.
@@ -83,7 +83,7 @@ class ChanSankakuParser(CustomParser):
 
     @staticmethod
     def parse_page(page):
-        """parse page."""
+        """Parse page."""
         classname_to_namespace_dict = {
             'tag-type-artist': 'creator',
             'tag-type-character': 'character',
@@ -135,7 +135,8 @@ class GelbooruParser(CustomParser):
             for item in page.select('li.{}'.format(key)):
                 if value:
                     value = value + ':'
-                result = value + item.text.rsplit(' ', 1)[0].split(' ', 1)[1].strip()
+                text = item.text.rsplit(' ', 1)[0].split(' ', 1)[1].strip()
+                result = value + text
                 yield result
 
 
@@ -150,6 +151,7 @@ class ZerochanParser(CustomParser):
         return False
 
     def get_tags(self):
+        """Get tags."""
         page = self.page
         tags = page.select('ul#tags li')
         for tag in tags:

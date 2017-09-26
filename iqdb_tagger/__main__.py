@@ -11,8 +11,8 @@ import structlog
 
 from iqdb_tagger import models
 from iqdb_tagger.__init__ import db_version
-from iqdb_tagger.utils import default_db_path, thumb_folder, user_data_dir
 from iqdb_tagger.custom_parser import get_tags as get_tags_from_parser
+from iqdb_tagger.utils import default_db_path, thumb_folder, user_data_dir
 
 db = '~/images/! tagged'
 DEFAULT_SIZE = 150, 150
@@ -120,7 +120,8 @@ def get_tags(browser, url, scraper, match_result):
 @click.command()
 @click.option(
     '--place', type=click.Choice(['iqdb', 'danbooru']),
-    default=DEFAULT_PLACE, help='Specify iqdb place, default:{}'.format(DEFAULT_PLACE)
+    default=DEFAULT_PLACE,
+    help='Specify iqdb place, default:{}'.format(DEFAULT_PLACE)
 )
 @click.option('--resize', is_flag=True, help='Use resized image.')
 @click.option('--size', is_flag=True, help='Specify resized image.')

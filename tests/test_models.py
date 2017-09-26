@@ -44,8 +44,9 @@ def test_thumbnail_rel_get_or_create_existing_thumbnail(tmpdir):
         img, size=(150, 150))
     assert not res2[1]
 
+
 def test_tags_from_img_alt():
-    """test method."""
+    """Test method."""
     m1 = models.Match()
     m1.img_alt = [
         'Rating: e Score: 5 Tags: '
