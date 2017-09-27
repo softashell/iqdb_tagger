@@ -190,7 +190,9 @@ def single_match_detail(pair_id):
             'URL in filtered hosts, no tag fetched', url=match_result.link)
     elif not tags or nocache:
         try:
-            get_tags(match_result)
+            tags = list(get_tags(match_result))
+            if not tags:
+                log.debug('Tags not founds', id=pair_id)
         except requests.exceptions.ConnectionError as e:
             log.error(str(e), url=match_result.link)
 
