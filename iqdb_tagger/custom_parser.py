@@ -15,6 +15,7 @@ def get_tags(page, url, scraper=None):
         DanbooruParser,
         Eshuushuu,
         GelbooruParser,
+        Konachan,
         YandereParser,
         ZerochanParser,
     ]
@@ -132,7 +133,13 @@ class GelbooruParser(CustomParser):
         }
         for key, value in classname_to_namespace_dict.items():
             for item in page.select('li.{}'.format(key)):
-                text = item.text.rsplit(' ', 1)[0].split(' ', 1)[1].strip()
+                try:
+                    text = item.text.rsplit(' ', 1)[0].split(' ', 1)[1].strip()
+                except IndexError:
+                    new_item_text = item.text.replace('\n', ' ')
+                    new_item_text = new_item_text.rsplit(' ', 1)[0].strip()
+                    new_item_text = new_item_text.split('? + - ', 1)[1]
+                    text = new_item_text
                 yield(value, text)
 
 
@@ -213,3 +220,31 @@ class Eshuushuu(CustomParser):
                 'div.meta dd[id^={}] span.tag a'.format(classname))
             for tag in tags:
                 yield (namespace, tag.text)
+
+
+class Konachan(CustomParser):
+    """Parser for konachan.com."""
+
+    @staticmethod
+    def is_url(url):
+        """Check url."""
+        if 'konachan.com/post/show/' in url:
+            return True
+        return False
+
+    def get_tags(self):
+        """Get tags."""
+        page = self.page
+        classname_to_namespace_dict = {
+            'tag-type-artist': 'creator',
+            'tag-type-character': 'character',
+            'tag-type-circle': 'character',
+            'tag-type-copyright': 'series',
+            'tag-type-style': 'style',
+            'tag-type-general': ''
+        }
+        for classname, namespace in classname_to_namespace_dict.items():
+            tags = page.select('ul li.{}'.format(classname))
+            for tag in tags:
+                text = tag.text.split(' ', 1)[1].strip().rsplit(' ', 1)[0]
+                yield namespace, text
