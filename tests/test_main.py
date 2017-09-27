@@ -11,7 +11,7 @@ from iqdb_tagger.__main__ import get_posted_image, init_program, main
 from iqdb_tagger.models import ImageModel, ThumbnailRelationship
 
 logging.basicConfig()
-vcr_log = logging.getLogger("vcr")
+vcr_log = logging.getLogger('vcr')
 vcr_log.setLevel(logging.INFO)
 
 
@@ -37,7 +37,7 @@ def test_rgba_on_get_posted_image(tmpdir):
 
 
 def test_empty_file_when_get_posted_image(
-        tmpdir, tmp_img
+        tmpdir, tmp_img  # pylint:disable=redefined-outer-name
 ):
     """Test method."""
     # compatibility
@@ -61,7 +61,7 @@ def test_empty_file_when_get_posted_image(
 
 @pytest.mark.non_travis_test
 @vcr.use_cassette('main.yml', record_mode='new_episodes')
-def test_main(tmpdir, tmp_img):
+def test_main(tmpdir, tmp_img):  # pylint:disable=redefined-outer-name
     """Test func."""
     # compatibility
     img_path = tmp_img

@@ -231,7 +231,7 @@ def main(
                     ff, resize, size, place, match_filter, write_tags,
                     browser=br, scraper=scraper
                 )
-            except Exception as e:
+            except Exception as e:  # pylint:disable=broad-except
                 err_set.append((ff, e))
                 err_found = True
         if err_found:
