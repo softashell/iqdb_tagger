@@ -91,10 +91,16 @@ def init_program(db_path=None):
     models.init_db(db_path, db_version)
 
 
-def get_tags(browser, scraper, match_result):
+def get_tags(match_result, browser=None, scraper=None):
     """Get tags."""
     # compatibility
     br = browser
+
+    if br is None:
+        br = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
+        br.raise_on_404 = True
+    if scraper is None:
+        scraper = cfscrape.CloudflareScraper()
 
     url = match_result.link
     br.open(url, timeout=10)
@@ -170,7 +176,7 @@ def main(
 
         if not tags:
             try:
-                tags = get_tags(br, scraper, match_result)
+                tags = get_tags(match_result, br, scraper)
             except requests.exceptions.ConnectionError as e:
                 log.error(str(e), url=url)
         if tags:

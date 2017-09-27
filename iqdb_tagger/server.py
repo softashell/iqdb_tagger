@@ -5,9 +5,7 @@ import os
 from math import ceil
 from tempfile import gettempdir
 
-import cfscrape
 import click
-import mechanicalsoup
 import requests
 import structlog
 from flask import (
@@ -185,14 +183,9 @@ def single_match_detail(pair_id):
         MatchTagRelationship.match == match_result)
     tags = [x.tag.full_name for x in mt_rel]
 
-    # init browser and scraper
-    br = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
-    br.raise_on_404 = True
-    scraper = cfscrape.CloudflareScraper()
-
     if not tags or nocache:
         try:
-            get_tags(br, scraper, match_result)
+            get_tags(match_result)
         except requests.exceptions.ConnectionError as e:
             log.error(str(e), url=match_result.link)
 
