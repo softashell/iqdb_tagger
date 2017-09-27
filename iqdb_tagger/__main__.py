@@ -30,7 +30,7 @@ iqdb_url_dict = {
 }
 
 
-def get_page_result(image, url):
+def get_page_result(image, url, browser=None):
     """Get page result.
 
     Args:
@@ -38,8 +38,13 @@ def get_page_result(image, url):
     Returns:
         HTML page from the result.
     """
-    br = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
-    br.raise_on_404 = True
+    # compatibility
+    br = browser
+
+    if br is None:
+        br = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
+        br.raise_on_404 = True
+
     br.open(url)
     html_form = br.select_form('form')
     html_form.input({'file': image})
@@ -137,6 +142,9 @@ def main(
 ):
     """Get similar image from iqdb."""
     init_program(db_path)
+    br = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
+    br.raise_on_404 = True
+
     post_img = get_posted_image(img_path=image, resize=resize, size=size)
 
     result = []
@@ -147,7 +155,7 @@ def main(
 
     if not result:
         url, im_place = iqdb_url_dict[place]
-        page = get_page_result(image=post_img.path, url=url)
+        page = get_page_result(image=post_img.path, url=url, browser=br)
         # if ok, will output: <Response [200]>
         result = list(models.ImageMatch.get_or_create_from_page(
             page=page, image=post_img, place=im_place))
@@ -156,8 +164,6 @@ def main(
     if match_filter == 'best-match':
         result = [x for x in result if x.status == x.STATUS_BEST_MATCH]
 
-    br = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
-    br.raise_on_404 = True
     scraper = cfscrape.CloudflareScraper()
     MatchTagRelationship = models.MatchTagRelationship
     for item in result:
