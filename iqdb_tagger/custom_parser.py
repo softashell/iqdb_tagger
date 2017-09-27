@@ -13,6 +13,7 @@ def get_tags(page, url, scraper=None):
     parser = [
         ChanSankakuParser,
         DanbooruParser,
+        Eshuushuu,
         GelbooruParser,
         YandereParser,
         ZerochanParser,
@@ -208,6 +209,7 @@ class Eshuushuu(CustomParser):
             'quicktag4_': 'character',
         }
         for classname, namespace in classname_to_namespace_dict.items():
-            tags = page.select('div.meta dd[id^={}] span.tag a'.format(classname))
+            tags = page.select(
+                'div.meta dd[id^={}] span.tag a'.format(classname))
             for tag in tags:
                 yield (namespace, tag.text)
