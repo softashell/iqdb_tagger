@@ -10,8 +10,8 @@
   <div id="tag-info">
     <h5>Tag</h5>
     <ul id="tag-info-list" class="row">
-      {% for mtr in entry.match_result.matchtagrelationship_set | sort(attribute='tag.cleaned_name') %}
-        <li class="tag-{{mtr.tag.namespace if mtr.tag.namespace else 'general'}} list-group-item col-md-3">{{mtr.tag.cleaned_name}}</li>
+      {% for mtr in entry.match_result.matchtagrelationship_set | sort(attribute='tag.name') %}
+        <li class="tag-{{mtr.tag.namespace if mtr.tag.namespace else 'general'}} list-group-item col-md-3">{{mtr.tag.name}}</li>
       {% else %}
         <li>No tags found.</li>
       {% endfor %}
