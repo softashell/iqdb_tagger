@@ -127,6 +127,7 @@ def run_program_for_single_img(
         image, resize, size, place, match_filter, write_tags, browser,
         scraper
 ):
+    """Run program for single image."""
     # compatibility
     br = browser
 
@@ -235,7 +236,10 @@ def main(
                 err_found = True
         if err_found:
             print('Found error(s)')
-            list(map(lambda x: print('path:{}\nerror:{}\n'.format(x[0], x[1])), err_set))
+            list(map(
+                lambda x: print('path:{}\nerror:{}\n'.format(x[0], x[1])),
+                err_set
+            ))
     else:
         image = prog_input
         run_program_for_single_img(
