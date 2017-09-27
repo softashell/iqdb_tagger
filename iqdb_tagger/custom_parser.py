@@ -186,3 +186,28 @@ class DanbooruParser(CustomParser):
             for item in page.select('li.{}'.format(key)):
                 text = item.text.rsplit(' ', 1)[0].split(' ', 1)[1].strip()
                 yield value, text
+
+
+class Eshuushuu(CustomParser):
+    """Parser for e-shuushuu.net."""
+
+    @staticmethod
+    def is_url(url):
+        """Check url."""
+        if 'e-shuushuu.net/image/' in url:
+            return True
+        return False
+
+    def get_tags(self):
+        """Get tags."""
+        page = self.page
+        classname_to_namespace_dict = {
+            'quicktag1_': '',
+            'quicktag2_': 'series',
+            'quicktag3_': 'creator',
+            'quicktag4_': 'character',
+        }
+        for classname, namespace in classname_to_namespace_dict.items():
+            tags = page.select('div.meta dd[id^={}] span.tag a'.format(classname))
+            for tag in tags:
+                yield (namespace, tag.text)
