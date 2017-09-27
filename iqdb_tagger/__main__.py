@@ -118,7 +118,7 @@ def get_tags(match_result, browser=None, scraper=None):
                 name=tag_name, namespace=namespace)
             models.MatchTagRelationship.get_or_create(
                 match=match_result, tag=tag_model)
-        return tags
+            yield tag_model
     else:
         log.debug('No tags found.')
 
@@ -135,10 +135,12 @@ def get_tags(match_result, browser=None, scraper=None):
 @click.option(
     '--match-filter', type=click.Choice(['default', 'best-match']),
     default='default', help='Filter the result.')
+@click.option(
+    '--write-tags', is_flag=True, help='Write best match\'s tags to text.')
 @click.argument('image')
 def main(
     image, resize=False, size=None,
-    db_path=None, place=DEFAULT_PLACE, match_filter='default'
+    db_path=None, place=DEFAULT_PLACE, match_filter='default', write_tags=False
 ):
     """Get similar image from iqdb."""
     init_program(db_path)
@@ -146,6 +148,7 @@ def main(
     br.raise_on_404 = True
 
     post_img = get_posted_image(img_path=image, resize=resize, size=size)
+    tag_textfile = image + '.txt'
 
     result = []
     for img_m_rel_set in post_img.imagematchrelationship_set:
@@ -182,11 +185,16 @@ def main(
 
         if not tags:
             try:
-                tags = get_tags(match_result, br, scraper)
+                tags = list(
+                    [x.full_name for x in get_tags(match_result, br, scraper)])
             except requests.exceptions.ConnectionError as e:
                 log.error(str(e), url=url)
         if tags:
             print('\n'.join(tags))
+            if write_tags:
+                with open(tag_textfile, 'a') as f:
+                    f.write('\n'.join(tags))
+                    f.write('\n')
         else:
             log.debug('No printing tags.')
         print('\n')
