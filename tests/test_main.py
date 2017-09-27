@@ -1,10 +1,27 @@
 """test module."""
+import logging
 import os
 
+import pytest
+import vcr
+from click.testing import CliRunner
 from PIL import Image
 
-from iqdb_tagger.__main__ import get_posted_image, init_program
+from iqdb_tagger.__main__ import get_posted_image, init_program, main
 from iqdb_tagger.models import ImageModel, ThumbnailRelationship
+
+logging.basicConfig()
+vcr_log = logging.getLogger("vcr")
+vcr_log.setLevel(logging.INFO)
+
+
+@pytest.fixture
+def tmp_img(tmpdir):
+    """Get temp image fixture used by some test."""
+    img_path = tmpdir.join('image.jpg')
+    im = Image.new('RGB', (160, 160))
+    im.save(img_path.strpath)
+    return img_path
 
 
 def test_rgba_on_get_posted_image(tmpdir):
@@ -20,16 +37,15 @@ def test_rgba_on_get_posted_image(tmpdir):
 
 
 def test_empty_file_when_get_posted_image(
-        tmpdir
+        tmpdir, tmp_img
 ):
     """Test method."""
+    # compatibility
+    img_path = tmp_img
+
     db_path = tmpdir.join('temp_db.db')
     init_program(db_path=db_path.strpath)
     thumb_folder = tmpdir.mkdir('thumb')
-    # creating image
-    img_path = tmpdir.join('image.jpg')
-    im = Image.new('RGB', (160, 160))
-    im.save(img_path.strpath)
 
     img, _ = ImageModel.get_or_create_from_path(img_path.strpath)
     res, _ = ThumbnailRelationship.get_or_create_from_image(img, (150, 150))
@@ -41,3 +57,22 @@ def test_empty_file_when_get_posted_image(
         os.utime(thumbnail_path, None)
 
     get_posted_image(img_path.strpath, output_thumb_folder=thumb_folder)
+
+
+@pytest.mark.non_travis_test
+@vcr.use_cassette('main.yml', record_mode='new_episodes')
+def test_main(tmpdir, tmp_img):
+    """Test func."""
+    # compatibility
+    img_path = tmp_img
+
+    db_path = tmpdir.join('temp_db.db')
+
+    runner = CliRunner()
+    result = runner.invoke(
+        main, [
+            '--db-path', db_path.strpath, '--resize',
+            '--match-filter', 'best-match', img_path.strpath
+        ]
+    )
+    assert result.exit_code == 0
