@@ -146,6 +146,7 @@ def main(
     init_program(db_path)
     br = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
     br.raise_on_404 = True
+    scraper = cfscrape.CloudflareScraper()
 
     post_img = get_posted_image(img_path=image, resize=resize, size=size)
     tag_textfile = image + '.txt'
@@ -167,7 +168,6 @@ def main(
     if match_filter == 'best-match':
         result = [x for x in result if x.status == x.STATUS_BEST_MATCH]
 
-    scraper = cfscrape.CloudflareScraper()
     MatchTagRelationship = models.MatchTagRelationship
     for item in result:
         # type item: models.ImageMatch
@@ -176,25 +176,28 @@ def main(
         url = match_result.link
 
         print('{}|{}|{}'.format(
-            item.similarity, item.status_verbose, url
-        ))
+            item.similarity, item.status_verbose, url))
 
         res = MatchTagRelationship.select().where(
             MatchTagRelationship.match == match_result)
-        tags = [x.tag.full_name for x in res]
+        tags = [x.tag for x in res]
 
         if not tags:
             try:
                 tags = list(
-                    [x.full_name for x in get_tags(match_result, br, scraper)])
+                    [x for x in get_tags(match_result, br, scraper)])
             except requests.exceptions.ConnectionError as e:
                 log.error(str(e), url=url)
+
+        tags_verbose = [x.full_name for x in tags]
         if tags:
-            print('\n'.join(tags))
-            if write_tags:
-                with open(tag_textfile, 'a') as f:
-                    f.write('\n'.join(tags))
-                    f.write('\n')
+            print('\n'.join(tags_verbose))
         else:
             log.debug('No printing tags.')
+        if tags and write_tags:
+            with open(tag_textfile, 'a') as f:
+                f.write('\n'.join(tags_verbose))
+                f.write('\n')
+            log.debug('tags written')
+
         print('\n')
