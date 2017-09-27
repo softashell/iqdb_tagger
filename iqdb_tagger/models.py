@@ -343,8 +343,12 @@ class ThumbnailRelationship(BaseModel):
             try:
                 im.save(thumb_path, 'JPEG')
             except OSError as e:
-                if str(e) == 'cannot write mode RGBA as JPEG':
-                    log.debug('Converting image from RGBA to JPEG')
+                valid_err = [
+                    'cannot write mode RGBA as JPEG',
+                    'cannot write mode P as JPEG',
+                ]
+                if str(e) in valid_err :
+                    log.debug('Converting JPEG to fix error', err=(str))
                     im = im.convert('RGB')
                     im.save(thumb_path, 'JPEG')
                 else:
