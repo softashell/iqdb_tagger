@@ -65,6 +65,7 @@ CHANGELOG
 0.1.0 (TBA)
 ```````````
 
+- new input mode. Now the program can parse folder to find file
 - new single match page
 - new argument :code:`write-tags` to write parsed tag to text file
 - change the way server start. run init subcommand first before start the server

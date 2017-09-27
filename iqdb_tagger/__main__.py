@@ -123,30 +123,12 @@ def get_tags(match_result, browser=None, scraper=None):
         log.debug('No tags found.')
 
 
-@click.command()
-@click.option(
-    '--place', type=click.Choice(['iqdb', 'danbooru']),
-    default=DEFAULT_PLACE,
-    help='Specify iqdb place, default:{}'.format(DEFAULT_PLACE)
-)
-@click.option('--resize', is_flag=True, help='Use resized image.')
-@click.option('--size', is_flag=True, help='Specify resized image.')
-@click.option('--db-path', help='Specify Database path.')
-@click.option(
-    '--match-filter', type=click.Choice(['default', 'best-match']),
-    default='default', help='Filter the result.')
-@click.option(
-    '--write-tags', is_flag=True, help='Write best match\'s tags to text.')
-@click.argument('image')
-def main(
-    image, resize=False, size=None,
-    db_path=None, place=DEFAULT_PLACE, match_filter='default', write_tags=False
+def run_program_for_single_img(
+        image, resize, size, place, match_filter, write_tags, browser,
+        scraper
 ):
-    """Get similar image from iqdb."""
-    init_program(db_path)
-    br = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
-    br.raise_on_404 = True
-    scraper = cfscrape.CloudflareScraper()
+    # compatibility
+    br = browser
 
     post_img = get_posted_image(img_path=image, resize=resize, size=size)
     tag_textfile = image + '.txt'
@@ -201,3 +183,62 @@ def main(
             log.debug('tags written')
 
         print('\n')
+
+
+@click.command()
+@click.option(
+    '--place', type=click.Choice(['iqdb', 'danbooru']),
+    default=DEFAULT_PLACE,
+    help='Specify iqdb place, default:{}'.format(DEFAULT_PLACE)
+)
+@click.option('--resize', is_flag=True, help='Use resized image.')
+@click.option('--size', is_flag=True, help='Specify resized image.')
+@click.option('--db-path', help='Specify Database path.')
+@click.option(
+    '--match-filter', type=click.Choice(['default', 'best-match']),
+    default='default', help='Filter the result.'
+)
+@click.option(
+    '--write-tags', is_flag=True, help='Write best match\'s tags to text.')
+@click.option(
+    '--input-mode', type=click.Choice(['default', 'folder']),
+    default='default', help='Set input mode.'
+)
+@click.argument('prog-input')
+def main(
+    prog_input, resize=False, size=None,
+    db_path=None, place=DEFAULT_PLACE, match_filter='default',
+    write_tags=False, input_mode='default'
+):
+    """Get similar image from iqdb."""
+    init_program(db_path)
+    br = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
+    br.raise_on_404 = True
+    scraper = cfscrape.CloudflareScraper()
+
+    if input_mode == 'folder':
+        assert os.path.isdir(prog_input), 'Input is not valid folder'
+        files = [os.path.join(prog_input, x) for x in os.listdir(prog_input)]
+        if not files:
+            print('No files found.')
+            return
+        err_set = []
+        err_found = False
+        for ff in files:
+            try:
+                run_program_for_single_img(
+                    ff, resize, size, place, match_filter, write_tags,
+                    browser=br, scraper=scraper
+                )
+            except Exception as e:
+                err_set.append((ff, e))
+                err_found = True
+        if err_found:
+            print('Found error(s)')
+            list(map(lambda x: print('path:{}\nerror:{}\n'.format(x[0], x[1])), err_set))
+    else:
+        image = prog_input
+        run_program_for_single_img(
+            image, resize, size, place, match_filter, write_tags,
+            browser=br, scraper=scraper
+        )
