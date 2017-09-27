@@ -4,6 +4,7 @@
 import os
 from math import ceil
 from tempfile import gettempdir
+from urllib.parse import urlparse
 
 import click
 import requests
@@ -182,8 +183,12 @@ def single_match_detail(pair_id):
     mt_rel = MatchTagRelationship.select().where(
         MatchTagRelationship.match == match_result)
     tags = [x.tag.full_name for x in mt_rel]
+    filtered_hosts = ['anime-pictures.net', 'www.theanimegallery.com']
 
-    if not tags or nocache:
+    if urlparse(match_result.link).netloc in filtered_hosts:
+        log.debug(
+            'URL in filtered hosts, no tag fetched', url=match_result.link)
+    elif not tags or nocache:
         try:
             get_tags(match_result)
         except requests.exceptions.ConnectionError as e:
