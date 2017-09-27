@@ -124,6 +124,10 @@ class GelbooruParser(CustomParser):
 
     def get_tags(self):
         """Get tags."""
+        page_title = self.page.select_one('head title').text.strip()
+        if page_title == 'Image List  | Gelbooru':
+            log.debug('Image list instead of post found.', url=self.url)
+            return
         page = self.page
         classname_to_namespace_dict = {
             'tag-type-artist': 'creator',
