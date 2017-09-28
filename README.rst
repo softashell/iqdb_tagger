@@ -21,6 +21,17 @@ Feature::
 Usage
 -----
 
+
+Use as Hydrus as cli program
+````````````````````````````
+
+To parse folder of images (e.g. in this example :code:`image_folder:`) and write tags to text file, use following command:
+
+.. code:: bash
+
+    iqdb-tagger --resize --match-filter best-match --write-tags --input-mode folder image_folder
+
+
 Use as Hydrus iqdb script server
 ````````````````````````````````
 1. Run :code:`iqdb-tagger-server init` when you run the server for first time.
@@ -69,7 +80,7 @@ CHANGELOG
 - new single match page
 - new argument :code:`write-tags` to write parsed tag to text file
 - change the way server start. run init subcommand first before start the server
-- remove :code:`html-dump argument`.
+- remove :code:`html-dump` argument.
 - fix pillow error. Install pillow if error stil raised.
 - fix png upload error.
 - fix OSError when thumbnail is an empty file.
