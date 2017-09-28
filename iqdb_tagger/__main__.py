@@ -125,7 +125,7 @@ def get_tags(match_result, browser=None, scraper=None):
 
 def run_program_for_single_img(
         image, resize, size, place, match_filter, write_tags, browser,
-        scraper
+        scraper, disable_tag_print=False
 ):
     """Run program for single image."""
     # compatibility
@@ -173,17 +173,17 @@ def run_program_for_single_img(
                 log.error(str(e), url=url)
 
         tags_verbose = [x.full_name for x in tags]
-        if tags:
+        log.debug('{} tag(s) founds'.format(len(tags_verbose)))
+        if tags and not disable_tag_print:
             print('\n'.join(tags_verbose))
         else:
             log.debug('No printing tags.')
+
         if tags and write_tags:
             with open(tag_textfile, 'a') as f:
                 f.write('\n'.join(tags_verbose))
                 f.write('\n')
             log.debug('tags written')
-
-        print('\n')
 
 
 @click.command()
@@ -225,11 +225,12 @@ def main(
             return
         err_set = []
         err_found = False
-        for ff in files:
+        for idx, ff in enumerate(files):
+            log.debug('file', f=ff, idx=idx, total=len(files))
             try:
                 run_program_for_single_img(
                     ff, resize, size, place, match_filter, write_tags,
-                    browser=br, scraper=scraper
+                    browser=br, scraper=scraper, disable_tag_print=True
                 )
             except Exception as e:  # pylint:disable=broad-except
                 err_set.append((ff, e))
