@@ -165,7 +165,13 @@ def run_program_for_single_img(
             MatchTagRelationship.match == match_result)
         tags = [x.tag for x in res]
 
-        if not tags:
+        filtered_hosts = ['anime-pictures.net', 'www.theanimegallery.com']
+        is_url_in_filtered_hosts = urlparse(match_result.link).netloc in \
+            filtered_hosts
+        if is_url_in_filtered_hosts:
+            log.debug(
+                'URL in filtered hosts, no tag fetched', url=match_result.link)
+        elif not tags:
             try:
                 tags = list(
                     [x for x in get_tags(match_result, br, scraper)])
