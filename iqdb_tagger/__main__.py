@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """main module."""
 import os
+from urllib.parse import urlparse
 
 import cfscrape
 import click
