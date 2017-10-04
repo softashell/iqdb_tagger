@@ -346,6 +346,7 @@ class ThumbnailRelationship(BaseModel):
                 valid_err = [
                     'cannot write mode RGBA as JPEG',
                     'cannot write mode P as JPEG',
+                    'cannot write mode LA as JPEG',
                 ]
                 err_str = str(e)
                 if err_str in valid_err:
