@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 """main module."""
+import logging
 import os
 from urllib.parse import urlparse
 
@@ -212,13 +213,24 @@ def run_program_for_single_img(
     '--input-mode', type=click.Choice(['default', 'folder']),
     default='default', help='Set input mode.'
 )
+@click.option('--verbose', '-v', is_flag=True, help='Verbose output.')
+@click.option('--debug', '-d', is_flag=True, help='Print debug output.')
 @click.argument('prog-input')
 def main(
     prog_input, resize=False, size=None,
     db_path=None, place=DEFAULT_PLACE, match_filter='default',
-    write_tags=False, input_mode='default'
+    write_tags=False, input_mode='default', verbose=False, debug=False
 ):
     """Get similar image from iqdb."""
+    # logging
+    log_level = None
+    if verbose:
+        log_level = logging.INFO
+    if debug:
+        log_level = logging.DEBUG
+    if log_level:
+        logging.basicConfig(level=log_level)
+
     init_program(db_path)
     br = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
     br.raise_on_404 = True
@@ -233,7 +245,7 @@ def main(
         err_set = []
         err_found = False
         for idx, ff in enumerate(files):
-            log.debug('file', f=ff, idx=idx, total=len(files))
+            log.debug('file', f=os.path.basename(ff), idx=idx, total=len(files))
             try:
                 run_program_for_single_img(
                     ff, resize, size, place, match_filter, write_tags,
