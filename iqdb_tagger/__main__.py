@@ -125,6 +125,29 @@ def get_tags(match_result, browser=None, scraper=None):
         log.debug('No tags found.')
 
 
+def get_tags_from_match_result(match_result, browser=None, scraper=None):
+    """Get tags from match result."""
+    url = match_result.link
+    res = models.MatchTagRelationship.select().where(
+        models.MatchTagRelationship.match == match_result)
+    tags = [x.tag for x in res]
+
+    filtered_hosts = ['anime-pictures.net', 'www.theanimegallery.com']
+    is_url_in_filtered_hosts = urlparse(match_result.link).netloc in \
+        filtered_hosts
+    if is_url_in_filtered_hosts:
+        log.debug(
+            'URL in filtered hosts, no tag fetched',
+            url=match_result.link)
+    elif not tags:
+        try:
+            tags = list(
+                [x for x in get_tags(match_result, browser, scraper)])
+        except requests.exceptions.ConnectionError as e:
+            log.error(str(e), url=url)
+    return tags
+
+
 def run_program_for_single_img(
         image, resize, size, place, match_filter, write_tags, browser,
         scraper, disable_tag_print=False
@@ -154,35 +177,16 @@ def run_program_for_single_img(
     if match_filter == 'best-match':
         result = [x for x in result if x.status == x.STATUS_BEST_MATCH]
 
-    MatchTagRelationship = models.MatchTagRelationship
     for item in result:
         # type item: models.ImageMatch
         # type match_result: models.Match object
         match_result = item.match.match_result
         url = match_result.link
-
         print('{}|{}|{}'.format(
             item.similarity, item.status_verbose, url))
 
         try:
-            res = MatchTagRelationship.select().where(
-                MatchTagRelationship.match == match_result)
-            tags = [x.tag for x in res]
-
-            filtered_hosts = ['anime-pictures.net', 'www.theanimegallery.com']
-            is_url_in_filtered_hosts = urlparse(match_result.link).netloc in \
-                filtered_hosts
-            if is_url_in_filtered_hosts:
-                log.debug(
-                    'URL in filtered hosts, no tag fetched',
-                    url=match_result.link)
-            elif not tags:
-                try:
-                    tags = list(
-                        [x for x in get_tags(match_result, br, scraper)])
-                except requests.exceptions.ConnectionError as e:
-                    log.error(str(e), url=url)
-
+            tags = get_tags_from_match_result(match_result, browser, scraper)
             tags_verbose = [x.full_name for x in tags]
             log.debug('{} tag(s) founds'.format(len(tags_verbose)))
             if tags and not disable_tag_print:
