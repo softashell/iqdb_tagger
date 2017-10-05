@@ -245,7 +245,8 @@ def main(
         err_set = []
         err_found = False
         for idx, ff in enumerate(files):
-            log.debug('file', f=os.path.basename(ff), idx=idx, total=len(files))
+            log.debug(
+                'file', f=os.path.basename(ff), idx=idx, total=len(files))
             try:
                 run_program_for_single_img(
                     ff, resize, size, place, match_filter, write_tags,
