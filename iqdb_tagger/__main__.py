@@ -133,6 +133,7 @@ def run_program_for_single_img(
     # compatibility
     br = browser
 
+    error_set = []
     post_img = get_posted_image(img_path=image, resize=resize, size=size)
     tag_textfile = image + '.txt'
 
@@ -163,35 +164,42 @@ def run_program_for_single_img(
         print('{}|{}|{}'.format(
             item.similarity, item.status_verbose, url))
 
-        res = MatchTagRelationship.select().where(
-            MatchTagRelationship.match == match_result)
-        tags = [x.tag for x in res]
+        try:
+            res = MatchTagRelationship.select().where(
+                MatchTagRelationship.match == match_result)
+            tags = [x.tag for x in res]
 
-        filtered_hosts = ['anime-pictures.net', 'www.theanimegallery.com']
-        is_url_in_filtered_hosts = urlparse(match_result.link).netloc in \
-            filtered_hosts
-        if is_url_in_filtered_hosts:
-            log.debug(
-                'URL in filtered hosts, no tag fetched', url=match_result.link)
-        elif not tags:
-            try:
-                tags = list(
-                    [x for x in get_tags(match_result, br, scraper)])
-            except requests.exceptions.ConnectionError as e:
-                log.error(str(e), url=url)
+            filtered_hosts = ['anime-pictures.net', 'www.theanimegallery.com']
+            is_url_in_filtered_hosts = urlparse(match_result.link).netloc in \
+                filtered_hosts
+            if is_url_in_filtered_hosts:
+                log.debug(
+                    'URL in filtered hosts, no tag fetched',
+                    url=match_result.link)
+            elif not tags:
+                try:
+                    tags = list(
+                        [x for x in get_tags(match_result, br, scraper)])
+                except requests.exceptions.ConnectionError as e:
+                    log.error(str(e), url=url)
 
-        tags_verbose = [x.full_name for x in tags]
-        log.debug('{} tag(s) founds'.format(len(tags_verbose)))
-        if tags and not disable_tag_print:
-            print('\n'.join(tags_verbose))
-        else:
-            log.debug('No printing tags.')
+            tags_verbose = [x.full_name for x in tags]
+            log.debug('{} tag(s) founds'.format(len(tags_verbose)))
+            if tags and not disable_tag_print:
+                print('\n'.join(tags_verbose))
+            else:
+                log.debug('No printing tags.')
 
-        if tags and write_tags:
-            with open(tag_textfile, 'a') as f:
-                f.write('\n'.join(tags_verbose))
-                f.write('\n')
-            log.debug('tags written')
+            if tags and write_tags:
+                with open(tag_textfile, 'a') as f:
+                    f.write('\n'.join(tags_verbose))
+                    f.write('\n')
+                log.debug('tags written')
+        except Exception as e:  # pylint:disable=broad-except
+            log.error('Error', e=str(e))
+            error_set.append(e)
+
+        return {'error': error_set}
 
 
 @click.command()
@@ -236,34 +244,39 @@ def main(
     br.raise_on_404 = True
     scraper = cfscrape.CloudflareScraper()
 
+    # variable used in both input mode
+    error_set = []
     if input_mode == 'folder':
         assert os.path.isdir(prog_input), 'Input is not valid folder'
         files = [os.path.join(prog_input, x) for x in os.listdir(prog_input)]
         if not files:
             print('No files found.')
             return
-        err_set = []
-        err_found = False
         for idx, ff in enumerate(files):
             log.debug(
                 'file', f=os.path.basename(ff), idx=idx, total=len(files))
+            result = {}
             try:
-                run_program_for_single_img(
+                result = run_program_for_single_img(
                     ff, resize, size, place, match_filter, write_tags,
                     browser=br, scraper=scraper, disable_tag_print=True
                 )
             except Exception as e:  # pylint:disable=broad-except
-                err_set.append((ff, e))
-                err_found = True
-        if err_found:
-            print('Found error(s)')
-            list(map(
-                lambda x: print('path:{}\nerror:{}\n'.format(x[0], x[1])),
-                err_set
-            ))
+                error_set.append((ff, e))
+            if result.get('error'):
+                error_set.extend([(ff, x) for x in result['error']])
     else:
         image = prog_input
-        run_program_for_single_img(
+        result = run_program_for_single_img(
             image, resize, size, place, match_filter, write_tags,
             browser=br, scraper=scraper
         )
+        if result.get('error'):
+            error_set.extend([(image, x) for x in result['error']])
+
+    if error_set:
+        print('Found error(s)')
+        list(map(
+            lambda x: print('path:{}\nerror:{}\n'.format(x[0], x[1])),
+            error_set
+        ))
