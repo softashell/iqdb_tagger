@@ -263,7 +263,7 @@ def main(
                 )
             except Exception as e:  # pylint:disable=broad-except
                 error_set.append((ff, e))
-            if result.get('error'):
+            if result is not None and result.get('error'):
                 error_set.extend([(ff, x) for x in result['error']])
     else:
         image = prog_input
@@ -271,7 +271,7 @@ def main(
             image, resize, size, place, match_filter, write_tags,
             browser=br, scraper=scraper
         )
-        if result.get('error'):
+        if result is not None and result.get('error'):
             error_set.extend([(image, x) for x in result['error']])
 
     if error_set:
