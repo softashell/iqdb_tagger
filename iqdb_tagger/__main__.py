@@ -168,6 +168,7 @@ def run_program_for_single_img(
     if match_filter == 'best-match':
         result = [x for x in result if x.status == x.STATUS_BEST_MATCH]
 
+    log.debug('Number of valid result', n=len(result))
     for item in result:
         # type item: models.ImageMatch
         # type match_result: models.Match object
@@ -194,7 +195,7 @@ def run_program_for_single_img(
             log.error('Error', e=str(e))
             error_set.append(e)
 
-        return {'error': error_set}
+    return {'error': error_set}
 
 
 @click.command()
