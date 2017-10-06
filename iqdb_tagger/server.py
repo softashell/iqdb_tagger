@@ -25,7 +25,7 @@ from iqdb_tagger.__main__ import (
     DEFAULT_PLACE,
     get_page_result,
     get_posted_image,
-    get_tags,
+    get_tags_from_match_result,
     init_program,
     iqdb_url_dict
 )
@@ -190,7 +190,7 @@ def single_match_detail(pair_id):
             'URL in filtered hosts, no tag fetched', url=match_result.link)
     elif not tags or nocache:
         try:
-            tags = list(get_tags(match_result))
+            tags = list(get_tags_from_match_result(match_result))
             if not tags:
                 log.debug('Tags not founds', id=pair_id)
         except requests.exceptions.ConnectionError as e:

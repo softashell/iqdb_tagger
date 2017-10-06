@@ -98,36 +98,13 @@ def init_program(db_path=None):
     models.init_db(db_path, db_version)
 
 
-def get_tags(match_result, browser=None, scraper=None):
-    """Get tags."""
-    # compatibility
-    br = browser
-
-    if br is None:
-        br = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
-        br.raise_on_404 = True
-    if scraper is None:
-        scraper = cfscrape.CloudflareScraper()
-
-    url = match_result.link
-    br.open(url, timeout=10)
-    page = br.get_current_page()
-    tags = get_tags_from_parser(page, url, scraper)
-    if tags:
-        for tag in tags:
-            namespace, tag_name = tag
-            tag_model, _ = models.Tag.get_or_create(
-                name=tag_name, namespace=namespace)
-            models.MatchTagRelationship.get_or_create(
-                match=match_result, tag=tag_model)
-            yield tag_model
-    else:
-        log.debug('No tags found.')
-
-
 def get_tags_from_match_result(match_result, browser=None, scraper=None):
     """Get tags from match result."""
-    url = match_result.link
+    if browser is None:
+        browser = mechanicalsoup.StatefulBrowser(
+            soup_config={'features': 'lxml'})
+        browser.raise_on_404 = True
+
     res = models.MatchTagRelationship.select().where(
         models.MatchTagRelationship.match == match_result)
     tags = [x.tag for x in res]
@@ -141,10 +118,24 @@ def get_tags_from_match_result(match_result, browser=None, scraper=None):
             url=match_result.link)
     elif not tags:
         try:
-            tags = list(
-                [x for x in get_tags(match_result, browser, scraper)])
+            browser.open(match_result.link, timeout=10)
+            page = browser.get_current_page()
+            new_tags = get_tags_from_parser(page, match_result.link, scraper)
+            new_tag_models = []
+            if new_tags:
+                for tag in new_tags:
+                    namespace, tag_name = tag
+                    tag_model, _ = models.Tag.get_or_create(
+                        name=tag_name, namespace=namespace)
+                    models.MatchTagRelationship.get_or_create(
+                        match=match_result, tag=tag_model)
+                    new_tag_models.append(tag_model)
+            else:
+                log.debug('No tags found.')
+
+            tags.extend(new_tag_models)
         except requests.exceptions.ConnectionError as e:
-            log.error(str(e), url=url)
+            log.error(str(e), url=match_result.link)
     return tags
 
 

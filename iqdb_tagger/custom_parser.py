@@ -1,5 +1,6 @@
 """parser module."""
 import bs4
+import cfscrape
 import structlog
 
 log = structlog.getLogger()
@@ -106,6 +107,8 @@ class ChanSankakuParser(CustomParser):
             h1_tag_text = page.select_one('h1').text
             if h1_tag_text != '503 Service Temporarily Unavailable':
                 log.error('Unexpected H1-tag text', text=h1_tag_text)
+            if self.scraper is None:
+                self.scraper = cfscrape.CloudflareScraper()
             resp = self.scraper.get(url, timeout=10)
             html_soup = bs4.BeautifulSoup(resp.text, 'lxml')
             return self.parse_page(html_soup)
