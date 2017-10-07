@@ -6,7 +6,7 @@
         <a class="mx-auto" href="#"><img class="card-img-top" src="{{url_for('thumb', basename=entry.path_basename)}}"></a>
         <div class="card-block"><p class="card-text">
           {{entry.size}}
-          {% if entry.thumbnailrelationship_set[0].original %}
+          {% if entry.thumbnailrelationship_set and entry.thumbnailrelationship_set[0].original %}
             ({{entry.thumbnailrelationship_set[0].original.size}})
           {% endif %}
           </p></div>
