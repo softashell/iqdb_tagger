@@ -57,7 +57,7 @@
         {% if page %}
           {% if page != pagination.page %}
             <li class="page-item">
-              <a class="page-link" href="{{ url_for_index_page(page) }}">{{ page }}</a>
+              <a class="page-link" href="{{ url_for('index', page=page) }}">{{ page }}</a>
             </li>
           {% else %}
             <li class="page-item active">
@@ -70,7 +70,7 @@
       {%- endfor %}
       {% if pagination.has_next %}
         <li class="page-item">
-          <a class="page-link" href="{{ url_for_index_page(pagination.page + 1) }}">Next &raquo;</a>
+          <a class="page-link" href="{{ url_for('index', page=pagination.page + 1) }}">Next &raquo;</a>
         </li>
       {% endif %}
     </ul>

@@ -157,13 +157,6 @@ def index(page):
         'index.html', entries=paginated_entries, pagination=pagination)
 
 
-def url_for_index_page(page):
-    """Get url for index page."""
-    args = request.view_args.copy()
-    args['page'] = page
-    return url_for(request.endpoint, **args)
-
-
 @app.route('/match/sha256-<checksum>', methods=['GET', 'POST'])
 def match_sha256(checksum):
     """Get image match the checksum."""
@@ -216,7 +209,6 @@ def init():
 def start(debug):
     """Start server."""
     # compatibility
-    app.jinja_env.globals['url_for_index_page'] = url_for_index_page
     app.run(debug=debug)
 
 
