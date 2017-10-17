@@ -257,7 +257,9 @@ class ImageMatch(BaseModel):
     @staticmethod
     def parse_page(page):
         """Parse page."""
-        if not isinstance(page, BeautifulSoup):
+        if isinstance(page, str):
+            page = BeautifulSoup(page, 'lxml')
+        elif not isinstance(page, BeautifulSoup):
             if not os.path.isfile(page):
                 raise ValueError('File not Exist: {}'.format(page))
             with open(page) as f:
