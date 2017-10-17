@@ -27,11 +27,11 @@
     {% for imr in entry.imagematchrelationship_set[:5] %}
       <div class="card col-lg-2" id="imr-{{imr.id}}">
         <a class="mx-auto" href="{{imr.match_result.link}}">
-          <img class="card-img-top" src="{{imr.match_result.iqdb_thumb}}">
+          <img style="max-width:150px;" class="card-img-top" src="{{imr.match_result.iqdb_thumb}}">
         </a>
         <div class="card-block">
             {% if imr.imagematch_set|length == 1 %}
-              <p class="card-text">
+              <p class="card-text" style="word-wrap:break-word;">
                 {{imr.imagematch_set[0].similarity}}% {{imr.match_result.size|default('', true)}}<br>
                 {{imr.imagematch_set[0].status_verbose }}<br>
                 {{imr.match_result.link_netloc}}
