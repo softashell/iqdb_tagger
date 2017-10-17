@@ -32,7 +32,7 @@ iqdb_url_dict = {
 }
 
 
-def get_page_result(image, url, browser=None):
+def get_page_result(image, url, browser=None, use_requests=False):
     """Get page result.
 
     Args:
@@ -47,6 +47,10 @@ def get_page_result(image, url, browser=None):
         br = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
         br.raise_on_404 = True
 
+    if use_requests:
+        files = {'file': open(image, 'rb')}
+        resp = requests.post(url, files=files, timeout=10)
+        return resp.text
     br.open(url)
     html_form = br.select_form('form')
     html_form.input({'file': image})
@@ -159,7 +163,8 @@ def run_program_for_single_img(
 
     if not result:
         url, im_place = iqdb_url_dict[place]
-        page = get_page_result(image=post_img.path, url=url, browser=br)
+        page = get_page_result(
+            image=post_img.path, url=url, browser=br, use_requests=True)
         # if ok, will output: <Response [200]>
         result = list(models.ImageMatch.get_or_create_from_page(
             page=page, image=post_img, place=im_place))
@@ -219,11 +224,15 @@ def run_program_for_single_img(
 )
 @click.option('--verbose', '-v', is_flag=True, help='Verbose output.')
 @click.option('--debug', '-d', is_flag=True, help='Print debug output.')
+@click.option(
+    '--abort-on-error', is_flag=True, help='Stop program when error occured')
 @click.argument('prog-input')
 def main(
     prog_input, resize=False, size=None,
     db_path=None, place=DEFAULT_PLACE, match_filter='default',
-    write_tags=False, input_mode='default', verbose=False, debug=False
+    write_tags=False, input_mode='default', verbose=False, debug=False,
+    abort_on_error=False
+
 ):
     """Get similar image from iqdb."""
     # logging
@@ -258,6 +267,8 @@ def main(
                     browser=br, scraper=scraper, disable_tag_print=True
                 )
             except Exception as e:  # pylint:disable=broad-except
+                if abort_on_error:
+                    raise e
                 error_set.append((ff, e))
             if result is not None and result.get('error'):
                 error_set.extend([(ff, x) for x in result['error']])
