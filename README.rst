@@ -78,7 +78,9 @@ CHANGELOG
 
 - new input mode. Now the program can parse folder to find file
 - new single match page
+- new argument :code:`abort-on-error` to stop the program when error occured
 - new argument :code:`write-tags` to write parsed tag to text file
+- change the post method. now it is default to use :code:`requests.post`
 - change the way server start. run init subcommand first before start the server
 - remove :code:`html-dump` argument.
 - fix pillow error. Install pillow if error stil raised.
