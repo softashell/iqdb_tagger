@@ -248,7 +248,7 @@ def main(
         if not files:
             print('No files found.')
             return
-        for idx, ff in enumerate(files):
+        for idx, ff in enumerate(sorted(files)):
             log.debug(
                 'file', f=os.path.basename(ff), idx=idx, total=len(files))
             result = {}
