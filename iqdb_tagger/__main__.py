@@ -257,7 +257,8 @@ def main(
         if not files:
             print('No files found.')
             return
-        for idx, ff in enumerate(sorted(files)):
+        sorted_files = sorted(files, key=lambda x: os.path.splitext(x)[1])
+        for idx, ff in enumerate(sorted_files):
             log.debug(
                 'file', f=os.path.basename(ff), idx=idx, total=len(files))
             result = {}
@@ -282,6 +283,7 @@ def main(
             error_set.extend([(image, x) for x in result['error']])
 
     if error_set:
+        error_set = sorted(error_set, key=lambda x: str(x[1]), reverse=True)
         print('Found error(s)')
         list(map(
             lambda x: print('path:{}\nerror:{}\n'.format(x[0], x[1])),
