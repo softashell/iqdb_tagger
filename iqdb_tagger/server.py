@@ -209,7 +209,7 @@ def init():
 def start(debug):
     """Start server."""
     # compatibility
-    app.run(debug=debug)
+    app.run(debug=debug, threaded=True)
 
 
 def main():
