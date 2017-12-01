@@ -56,19 +56,14 @@ Every uploaded and match history can be seen on Front page (in this case http://
 Installation
 ------------
 
-To install use pip:
-
-.. code:: bash
-
-    $ pip install iqdb_tagger
-
-
-Or clone the repo:
-
 .. code:: bash
 
     $ git clone https://github.com/rachmadaniHaryono/iqdb_tagger.git
+    $ cd iqdb_tagger
+    # run the command below
     $ python setup.py install
+    # or
+    $ pip install .
 
 CHANGELOG
 ---------
