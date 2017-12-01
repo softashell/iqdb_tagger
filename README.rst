@@ -62,6 +62,8 @@ Installation
     $ cd iqdb_tagger
     # run the command below
     $ python setup.py install
+    # for windows user: to force it using python3 run following command
+    $ python -3 setup.py install
     # or
     $ pip install .
 
