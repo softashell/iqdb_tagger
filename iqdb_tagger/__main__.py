@@ -24,11 +24,13 @@ services = ['1', '2', '3', '4', '5', '6', '10', '11']
 forcegray = False
 log = structlog.getLogger()
 iqdb_url_dict = {
-    'iqdb': ('http://iqdb.org', models.ImageMatch.SP_IQDB),
+    'iqdb': (
+        'http://iqdb.org', models.ImageMatch.SP_IQDB),
     'danbooru': (
-        'http://danbooru.iqdb.org',
-        models.ImageMatch.SP_DANBOORU
+        'http://danbooru.iqdb.org', models.ImageMatch.SP_DANBOORU
     ),
+    'e621': (
+        'http://iqdb.harry.lu', models.ImageMatch.SP_E621),
 }
 
 
@@ -205,7 +207,7 @@ def run_program_for_single_img(
 
 @click.command()
 @click.option(
-    '--place', type=click.Choice(['iqdb', 'danbooru']),
+    '--place', type=click.Choice([x for x in iqdb_url_dict]),
     default=DEFAULT_PLACE,
     help='Specify iqdb place, default:{}'.format(DEFAULT_PLACE)
 )

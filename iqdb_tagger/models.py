@@ -189,9 +189,11 @@ class ImageMatch(BaseModel):
     )
     SP_IQDB = 0
     SP_DANBOORU = 1
+    SP_E621 = 2
     SP_CHOICES = (
         (SP_IQDB, 'iqdb'),
         (SP_DANBOORU, 'danbooru'),
+        (SP_E621, 'e621'),
     )
     match = ForeignKeyField(ImageMatchRelationship)
     similarity = IntegerField()
