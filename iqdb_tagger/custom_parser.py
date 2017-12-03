@@ -14,6 +14,7 @@ def get_tags(page, url, scraper=None):
     parser = [
         ChanSankakuParser,
         DanbooruParser,
+        E621Parser,
         Eshuushuu,
         GelbooruParser,
         Konachan,
@@ -255,3 +256,32 @@ class Konachan(CustomParser):
             for tag in tags:
                 text = tag.text.split(' ', 1)[1].strip().rsplit(' ', 1)[0]
                 yield namespace, text
+
+
+class E621Parser(CustomParser):
+    """Parser for e621."""
+
+    @staticmethod
+    def is_url(url):
+        """Check url."""
+        if 'e621.net/post/show/' in url:
+            return True
+        return False
+
+    def get_tags(self):
+        """Get tags."""
+        classname_to_namespace_dict = {
+            'tag-type-artist': 'creator',
+            'tag-type-character': 'character',
+            'tag-type-copyright': 'series',
+            'tag-type-species': 'species',
+            'tag-type-general': ''
+        }
+        scraper = cfscrape.CloudflareScraper()
+        resp = scraper.get(self.url, timeout=10)
+        page = bs4.BeautifulSoup(resp.text, 'lxml')
+
+        for key, namespace in classname_to_namespace_dict.items():
+            for item in page.select('li.{}'.format(key)):
+                name = item.text.rsplit(' ', 1)[0].strip().split('? ', 1)[1].strip()
+                yield (namespace, name)

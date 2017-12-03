@@ -210,10 +210,13 @@ class ImageMatch(BaseModel):
             header_text = header_tag.text
             if header_text in ('Your image', 'No relevant matches'):
                 return {}
+            best_match_text = ('Best match', 'Additional match', 'Probable match:')
             if header_text == 'Possible match':
                 status = ImageMatch.STATUS_POSSIBLE_MATCH
-            elif header_text in ('Best match', 'Additional match'):
+            elif header_text in best_match_text:
                 status = ImageMatch.STATUS_BEST_MATCH
+            elif header_text == 'Improbable match:':
+                status = ImageMatch.STATUS_OTHER
             else:
                 log.debug('header text', v=header_text)
                 status = ImageMatch.STATUS_OTHER
@@ -287,7 +290,8 @@ class ImageMatch(BaseModel):
         """Get or create from page result."""
         if place is None:
             place = ImageMatch.SP_IQDB
-        for item in ImageMatch.parse_page(page):
+        items = ImageMatch.parse_page(page)
+        for item in items:
             match_result, _ = Match.get_or_create(
                 href=item['href'], defaults={
                     'thumb': item['thumb'],

@@ -81,7 +81,8 @@ def get_posted_image(
         # use thumbnail if no size is given
         resized_thumb_rel = def_thumb_rel
     else:
-        log.debug('Unknown config.', resize=resize, size=size)
+        # no resize, return models.ImageModel obj
+        return img
 
     return resized_thumb_rel.thumbnail \
         if resized_thumb_rel is not None else img
@@ -165,8 +166,9 @@ def run_program_for_single_img(
 
     if not result:
         url, im_place = iqdb_url_dict[place]
+        use_requests = True if place != 'e621' else False
         page = get_page_result(
-            image=post_img.path, url=url, browser=br, use_requests=True)
+            image=post_img.path, url=url, browser=br, use_requests=use_requests)
         # if ok, will output: <Response [200]>
         result = list(models.ImageMatch.get_or_create_from_page(
             page=page, image=post_img, place=im_place))
