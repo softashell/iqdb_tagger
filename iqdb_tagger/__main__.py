@@ -168,7 +168,9 @@ def run_program_for_single_img(
         url, im_place = iqdb_url_dict[place]
         use_requests = True if place != 'e621' else False
         page = get_page_result(
-            image=post_img.path, url=url, browser=br, use_requests=use_requests)
+            image=post_img.path, url=url, browser=br,
+            use_requests=use_requests
+        )
         # if ok, will output: <Response [200]>
         result = list(models.ImageMatch.get_or_create_from_page(
             page=page, image=post_img, place=im_place))

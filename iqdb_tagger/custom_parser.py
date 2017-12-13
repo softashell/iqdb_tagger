@@ -283,5 +283,7 @@ class E621Parser(CustomParser):
 
         for key, namespace in classname_to_namespace_dict.items():
             for item in page.select('li.{}'.format(key)):
-                name = item.text.rsplit(' ', 1)[0].strip().split('? ', 1)[1].strip()
+                name = \
+                    item.text \
+                    .rsplit(' ', 1)[0].strip().split('? ', 1)[1].strip()
                 yield (namespace, name)

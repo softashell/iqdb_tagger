@@ -210,7 +210,8 @@ class ImageMatch(BaseModel):
             header_text = header_tag.text
             if header_text in ('Your image', 'No relevant matches'):
                 return {}
-            best_match_text = ('Best match', 'Additional match', 'Probable match:')
+            best_match_text = \
+                ('Best match', 'Additional match', 'Probable match:')
             if header_text == 'Possible match':
                 status = ImageMatch.STATUS_POSSIBLE_MATCH
             elif header_text in best_match_text:
