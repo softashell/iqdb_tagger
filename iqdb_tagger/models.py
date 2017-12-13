@@ -203,9 +203,8 @@ class ImageMatch(BaseModel):
     force_gray = BooleanField(default=False)
 
     @staticmethod
-    def parse_table(table):
-        """Parse table."""
-        header_tag = table.select_one('th')
+    def _get_status_from_header_tag(header_tag):
+        """Get status from header tag."""
         if hasattr(header_tag, 'text'):
             header_text = header_tag.text
             if header_text in ('Your image', 'No relevant matches'):
@@ -223,6 +222,13 @@ class ImageMatch(BaseModel):
                 status = ImageMatch.STATUS_OTHER
         else:
             status = ImageMatch.STATUS_OTHER
+        return status
+
+    @staticmethod
+    def parse_table(table):
+        """Parse table."""
+        header_tag = table.select_one('th')
+        status = ImageMatch._get_status_from_header_tag(header_tag)
         td_tags = table.select('td')
         assert '% similarity' in td_tags[-1].text
         size_and_rating_text = td_tags[-2].text
