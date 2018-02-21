@@ -208,7 +208,7 @@ class ImageMatch(BaseModel):
         if hasattr(header_tag, 'text'):
             header_text = header_tag.text
             if header_text in ('Your image', 'No relevant matches'):
-                return {}
+                return None
             best_match_text = \
                 ('Best match', 'Additional match', 'Probable match:')
             if header_text == 'Possible match':
@@ -229,8 +229,10 @@ class ImageMatch(BaseModel):
         """Parse table."""
         header_tag = table.select_one('th')
         status = ImageMatch._get_status_from_header_tag(header_tag)
+        if status is None or status == ImageMatch.STATUS_OTHER:
+            return None
         td_tags = table.select('td')
-        assert '% similarity' in td_tags[-1].text
+        assert '% similarity' in td_tags[-1].text, "similarity was not found in " + header_tag.text
         size_and_rating_text = td_tags[-2].text
         rating = Match.RATING_UNKNOWN
         for item in Match.RATING_CHOICES:
@@ -284,7 +286,7 @@ class ImageMatch(BaseModel):
             if not res:
                 continue
             a_tags = table.select('a')
-            assert len(a_tags) < 3
+            assert len(a_tags) < 3, "Unexpected html received at parse_page. Malformed link"
             if len(a_tags) == 2:
                 additional_res = res
                 additional_res['href'] = \
@@ -347,7 +349,7 @@ class ThumbnailRelationship(BaseModel):
             if x.thumbnail.width == size[0] and x.thumbnail.height == size[1]
         ]
         if thumbnails:
-            assert len(thumbnails) == 1
+            assert len(thumbnails) == 1, "There was not one thumbnail for the result"
             return thumbnails[0], False
         thumb_path = '{}-{}-{}.jpg'.format(image.checksum, size[0], size[1])
         if thumb_folder:
