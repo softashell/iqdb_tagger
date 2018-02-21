@@ -234,13 +234,15 @@ def run_program_for_single_img(
     '--abort-on-error', is_flag=True, help='Stop program when error occured')
 @click.argument('prog-input')
 def main(
-    prog_input, resize=False, size=None,
+    prog_input=None, resize=False, size=None,
     db_path=None, place=DEFAULT_PLACE, match_filter='default',
     write_tags=False, input_mode='default', verbose=False, debug=False,
     abort_on_error=False
 
 ):
     """Get similar image from iqdb."""
+    assert prog_input is not None, "Input is not a valid path"
+
     # logging
     log_level = None
     if verbose:
@@ -248,7 +250,8 @@ def main(
     if debug:
         log_level = logging.DEBUG
     if log_level:
-        logging.basicConfig(level=log_level)
+
+        logging.basicConfig(handlers=[logging.FileHandler(os.path.join(user_data_dir, 'output.log'), 'w', 'utf-8')], level=log_level)
 
     init_program(db_path)
     br = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
@@ -289,9 +292,10 @@ def main(
             error_set.extend([(image, x) for x in result['error']])
 
     if error_set:
-        error_set = sorted(error_set, key=lambda x: str(x[1]), reverse=True)
-        print('Found error(s)')
-        list(map(
-            lambda x: print('path:{}\nerror:{}\n'.format(x[0], x[1])),
-            error_set
-        ))
+        log.error('Found error(s)')
+        for x in error_set:
+            log.error('path: ' + x[0] + '\nerror: ' + str(x[1]))
+
+
+if __name__ == '__main__':
+    main()
