@@ -229,7 +229,7 @@ class ImageMatch(BaseModel):
         """Parse table."""
         header_tag = table.select_one('th')
         status = ImageMatch._get_status_from_header_tag(header_tag)
-        if status is None or status == ImageMatch.STATUS_OTHER:
+        if status is None:
             return None
         td_tags = table.select('td')
         assert '% similarity' in td_tags[-1].text, "similarity was not found in " + header_tag.text
