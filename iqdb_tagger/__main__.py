@@ -141,9 +141,7 @@ def get_tags_from_match_result(match_result, browser=None, scraper=None):
                 log.debug('No tags found.')
 
             tags.extend(new_tag_models)
-        except requests.exceptions.ConnectionError as e:
-            log.error(str(e), url=match_result.link)
-        except mechanicalsoup.LinkNotFoundError as e:
+        except (requests.exceptions.ConnectionError, mechanicalsoup.LinkNotFoundError) as e:
             log.error(str(e), url=match_result.link)
     return tags
 
