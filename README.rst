@@ -1,8 +1,8 @@
 IQDB TAGGER
 ===========
 
-.. image:: https://travis-ci.org/jarun/Buku.svg?branch=master
-    :target: https://travis-ci.org/jarun/Buku
+.. image:: https://travis-ci.org/rachmadaniHaryono/iqdb_tagger.svg?branch=master
+    :target: https://travis-ci.org/rachmadaniHaryono/iqdb_tagger
 
 .. image:: https://img.shields.io/badge/python-3-brightgreen.svg
 
