@@ -56,6 +56,14 @@ Every uploaded and match history can be seen on Front page (in this case http://
 Installation
 ------------
 
+Install it with from pypi
+
+.. code:: bash
+
+    $ pip install iqdb_tagger
+
+Or install it manually
+
 .. code:: bash
 
     $ git clone https://github.com/rachmadaniHaryono/iqdb_tagger.git
