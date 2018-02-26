@@ -73,8 +73,8 @@ To install under python3 follow the instruction on this link https://stackoverfl
 CHANGELOG
 ---------
 
-0.1.0 (TBA)
-```````````
+0.1.0 (2018-02-26)
+``````````````````
 
 - new input mode. Now the program can parse folder to find file
 - new single match page
@@ -87,9 +87,6 @@ CHANGELOG
 - fix png upload error.
 - fix OSError when thumbnail is an empty file.
 
-0.0.1
-`````
-- Program created
 
 FAQ
 ---
