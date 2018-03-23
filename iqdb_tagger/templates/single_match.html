@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class="container">
+  <br>
+  <div class="row justify-content-center">
+    <div id='main-image' style="padding:10px">
+      <a href="{{url_for('match_sha256', checksum=entry.image.checksum)}}">
+        <img class="img-responsive" src="{{url_for('thumb', basename=entry.image.path_basename)}}"></img>
+      </a>
+    </div>
+    <div id='match-image' style="padding:10px">
+      <a href="{{entry.match_result.link}}">
+        <img class="img-responsive" src="{{entry.match_result.iqdb_thumb}}"></img>
+      </a>
+    </div>
+  </div>
+  <br/>
+  <div id="tag-info">
+    <h5>Tag</h5>
+    <ul id="tag-info-list" class="row">
+      {% for mtr in entry.match_result.matchtagrelationship_set | sort(attribute='tag.name') %}
+        <li class="tag-{{mtr.tag.namespace if mtr.tag.namespace else 'general'}} list-group-item col-md-3">{{mtr.tag.name}}</li>
+      {% else %}
+        <li>No tags found.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

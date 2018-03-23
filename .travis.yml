@@ -1,0 +1,14 @@
+language: python
+python:
+  - "3.5"
+  - "3.6"
+before_install:
+  - "pip install -r requirements-dev.txt"
+install:
+  - "pip install -e ."
+  - "pip install -r requirements.txt"
+addons:
+script:
+  - find . -iname "*.py" -and -not -path './.tox/*' -and -not -path './docs/*' | xargs pylint --rcfile=.pylintrc
+  - python -m flake8
+  - python3 -m pytest -m "not non_travis_test" .

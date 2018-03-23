@@ -1,0 +1,5 @@
+*.jpg
+iqdb_tagger/note.md
+main.yml
+tests/test_main
+tox.ini

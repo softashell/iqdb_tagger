@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+{% block body %}
+<div class="container">
+  <div class="card-group">
+    <div class="card col-lg-2" id="image-model-{{entry.id}}">
+        <a class="mx-auto" href="#"><img class="card-img-top" src="{{url_for('thumb', basename=entry.path_basename)}}"></a>
+        <div class="card-block"><p class="card-text">
+          {{entry.size}}
+          {% if entry.thumbnailrelationship_set and entry.thumbnailrelationship_set[0].original %}
+            ({{entry.thumbnailrelationship_set[0].original.size}})
+          {% endif %}
+          </p></div>
+    </div>
+
+    {% for imr in entry.imagematchrelationship_set[:5] %}
+      <div class="card col-lg-2" id="imr-{{imr.id}}">
+        <a data-netloc="{{imr.match_result.link_netloc|replace('.', '-')}}" data-status="{{imr.imagematch_set[0].status_verbose|lower|replace(' ', '-')}}" class="mx-auto " href="{{imr.match_result.link}}">
+          <img class="card-img-top" src="{{imr.match_result.iqdb_thumb}}">
+        </a>
+        <div class="card-block">
+            {% if imr.imagematch_set|length == 1 %}
+              <p class="card-text">
+                {{imr.imagematch_set[0].similarity}}% {{imr.match_result.size}}<br>
+                {{imr.imagematch_set[0].status_verbose }}<br>
+                {{imr.match_result.link_netloc}}
+		<a class='img-match-detail' data-netloc="{{imr.match_result.link_netloc|replace('.', '-')}}" data-status="{{imr.imagematch_set[0].status_verbose|lower|replace(' ', '-')}}" href="{{url_for('single_match_detail', pair_id=imr.id)}}"> detail</a>
+              </p>
+            {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+
+  </div>
+  <br>
+  {% for imr_group in entry.imagematchrelationship_set[5:]|batch(6) %}
+    <div class="card-group">
+      {% for imr in imr_group %}
+        <div class="card col-lg-2" id="imr-{{imr.id}}">
+          <a data-netloc="{{imr.match_result.link_netloc|replace('.', '-')}}" data-status="{{imr.imagematch_set[0].status_verbose|lower|replace(' ', '-')}}" class="mx-auto " href="{{imr.match_result.link}}">
+            <img class="card-img-top" src="{{imr.match_result.iqdb_thumb}}">
+          </a>
+          <div class="card-block">
+              {% if imr.imagematch_set|length == 1 %}
+                <p class="card-text">
+                  {{imr.imagematch_set[0].similarity}}% {{imr.match_result.size}}<br>
+                  {{imr.imagematch_set[0].status_verbose }}<br>
+                  {{imr.match_result.link_netloc}}
+		  <a class='img-match-detail' data-netloc="{{imr.match_result.link_netloc|replace('.', '-')}}" data-status="{{imr.imagematch_set[0].status_verbose|lower|replace(' ', '-')}}" href="{{url_for('single_match_detail', pair_id=imr.id)}}"> detail</a>
+                </p>
+              {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    <br>
+  {% endfor %}
+</div>
+{% endblock %}

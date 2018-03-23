@@ -1,0 +1,32 @@
+[MESSAGES CONTROL]
+disable=
+  #Anomalous backslash in string: (anomalous-backslash-in-string)
+  anomalous-backslash-in-string,
+  #Wrong hanging indentation before block (add 4 spaces).  (bad-continuation)
+  bad-continuation,
+  #Invalid variable name (invalid-name)
+  invalid-name,
+  #Missing class docstring (missing-docstring)
+  missing-docstring,
+  #Instance of has no member (no-member)
+  no-member,
+  #No value for argument 'image' in function call (no-value-for-parameter)
+  no-value-for-parameter,
+  #Unnecessary parens after 'if' keyword (superfluous-parens)
+  superfluous-parens,
+  #Too few public methods (0/2) (too-few-public-methods)
+  too-few-public-methods,
+  #Too many arguments (too-many-arguments)
+  too-many-arguments,
+  #Too many local variables (too-many-locals)
+  too-many-locals,
+  #Unreachable code (unreachable)
+  unreachable,
+  #Using a conditional statement with a constant value (using-constant-test)
+  using-constant-test,
+  #Value is unsubscriptable (unsubscriptable-object)
+  unsubscriptable-object,
+  #Either all return statements in a function should return an expression, or none of them should
+  inconsistent-return-statements,
+max-line-length=140
+max-branches=13
