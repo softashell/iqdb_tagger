@@ -1,30 +1,22 @@
-{% extends "layout.html" %}
+{% extends 'admin/base.html' %}
+
 {% block body %}
+<form class="form-horizontal" style="margin-top: 10px" action="{{url_for('admin.index')}}" method="POST" enctype="multipart/form-data">
+  <div class="form-group"> {{form.file.label(class_="col-sm-2 control-label")}} {{form.file()}} </div>
+  <div class="form-group"> {{form.resize.label(class_="col-sm-2 control-label")}} {{form.resize()}} </div>
+  <div class="form-group">
+    {{form.place.label(class_="col-sm-2 control-label")}}
+    <div class="col-sm-2">{{form.place(class_="form-control")}}</div>
+  </div>
+  <div class="form-group"> <div class="col-sm-offset-2 col-sm-10"> <button type="submit" class="btn btn-default">Submit</button> </div> </div>
+</form>
+
 <div class="container">
-  <br>
-  <form class="form-inline">
-    <div class="form-group">
-      <label for="InputFile">Image input</label>
-      <input type="file" class="form-control-file" id="file" aria-describedby="fileHelp">
-      <small id="fileHelp" class="form-text text-muted">Upload picture here.</small>
-      <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Submit</button>
-    </div>
-  </form>
   <br>
   {% for entry in entries %}
     <div class="card-group">
-    <div class="card col-lg-2" id="image-model-{{entry.id}}">
-      <a class="mx-auto" href="{{url_for('match_sha256', checksum=entry.checksum)}}"><img class="card-img-top" src="{{url_for('thumb', basename=entry.path_basename)}}"></a>
-      <div class="card-block">
-        <p class="card-text">
-        {{entry.size}}
-        {% if entry.thumbnailrelationship_set[0].original %}
-          ({{entry.thumbnailrelationship_set[0].original.size}})
-        {% endif %}
-        </p>
-      </div>
-    </div>
-    {% for imr in entry.imagematchrelationship_set[:5] %}
+    <p> <a class="mx-auto" href="{{url_for('match_sha256', checksum=entry.checksum)}}">{{entry.checksum}}</a> </p>
+    {% for imr in entry.imagematchrelationship_set[:6] %}
       <div class="card col-lg-2" id="imr-{{imr.id}}">
         <a class="mx-auto" href="{{imr.match_result.link}}">
           <img style="max-width:150px;" class="card-img-top" src="{{imr.match_result.iqdb_thumb}}">
@@ -46,35 +38,5 @@
   {% else %}
   <p>No match found.</p>
   {% endfor %}
-  {% if pagination %}
-    {{render_pagination(pagination)}}
-  {% endif %}
 </div>
 {% endblock %}
-
-{% macro render_pagination(pagination) %}
-  <nav aria-label="Page navigation example">
-    <ul class="pagination">
-      {%- for page in pagination.iter_pages() %}
-        {% if page %}
-          {% if page != pagination.page %}
-            <li class="page-item">
-              <a class="page-link" href="{{ url_for('index', page=page) }}">{{ page }}</a>
-            </li>
-          {% else %}
-            <li class="page-item active">
-              <span class="page-link"> {{ page }} <span class="sr-only">(current)</span> </span>
-            </li>
-          {% endif %}
-        {% else %}
-          <li class="page-item"> <span class="page-link ellipsis">…</span> </li>
-        {% endif %}
-      {%- endfor %}
-      {% if pagination.has_next %}
-        <li class="page-item">
-          <a class="page-link" href="{{ url_for('index', page=pagination.page + 1) }}">Next &raquo;</a>
-        </li>
-      {% endif %}
-    </ul>
-  </nav>
-{% endmacro %}
