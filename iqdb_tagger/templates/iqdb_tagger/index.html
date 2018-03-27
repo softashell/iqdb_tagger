@@ -46,7 +46,9 @@
   {% else %}
   <p>No match found.</p>
   {% endfor %}
-  {{render_pagination(pagination)}}
+  {% if pagination %}
+    {{render_pagination(pagination)}}
+  {% endif %}
 </div>
 {% endblock %}
 
