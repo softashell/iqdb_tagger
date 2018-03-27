@@ -16,6 +16,10 @@ install_requires = [
     'beautifulsoup4>=4.6.0',
     'cfscrape==1.9.0',
     'click>=6.7',
+    'Flask-Admin==1.5.1',
+    'flask-paginate==0.5.1',
+    'Flask-WTF==0.14.2',
+    'Flask==0.12.2',
     'Flask>=0.12.2',
     'funclog>=0.3.0',
     'lxml>=3.8.0',
@@ -30,8 +34,8 @@ setup(
     version=__version__,
     description='Get result from iqdb.org.',
     long_description=long_description,
-    url='https://github.com/rachmadaniHaryono/iqdb_tagger',
-    download_url='https://github.com/rachmadaniHaryono/iqdb_tagger'
+    url='https://github.com/softashell/iqdb_tagger',
+    download_url='https://github.com/softashell/iqdb_tagger'
     '/tarball/' + __version__,
     license='BSD',
     classifiers=[
@@ -50,7 +54,7 @@ setup(
     entry_points={
         'console_scripts': [
             'iqdb-tagger = iqdb_tagger.__main__:main',
-            'iqdb-tagger-server = iqdb_tagger.server:main',
+            'iqdb-tagger-server = iqdb_tagger.server:cli',
         ]
     }
 
