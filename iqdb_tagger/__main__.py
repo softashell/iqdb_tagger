@@ -62,14 +62,14 @@ def get_page_result(image, url, browser=None, use_requests=False):
 
 
 def get_posted_image(
-        img_path, resize=False, size=None, output_thumb_folder=None):
+        img_path, resize=False, size=None, output_thumb_folder=None, thumb_path=None):
     """Get posted image."""
     if output_thumb_folder is None:
         output_thumb_folder = thumb_folder
 
     img, _ = models.ImageModel.get_or_create_from_path(img_path)
     def_thumb_rel, _ = models.ThumbnailRelationship.get_or_create_from_image(
-        image=img, thumb_folder=output_thumb_folder, size=DEFAULT_SIZE)
+        image=img, thumb_folder=output_thumb_folder, size=DEFAULT_SIZE, thumb_path=thumb_path)
     resized_thumb_rel = None
 
     if resize and size:

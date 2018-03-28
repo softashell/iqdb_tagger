@@ -20,9 +20,10 @@ class HomeView(AdminIndexView):
         page = request.args.get(get_page_parameter(), type=int, default=1)
         form = forms.ImageUploadForm()
         if form.file.data:
-            with NamedTemporaryFile() as temp:
+            with NamedTemporaryFile() as temp, NamedTemporaryFile() as thumb_temp:
                 form.file.data.save(temp.name)
-                posted_img = get_posted_image(img_path=temp.name, resize=form.resize.data)
+                posted_img = get_posted_image(
+                    img_path=temp.name, resize=form.resize.data, thumb_path=thumb_temp.name)
                 place = [x[1] for x in form.place.choices if x[0] == int(form.place.data)][0]
                 url, im_place = iqdb_url_dict[place]
                 query = posted_img.imagematchrelationship_set \
