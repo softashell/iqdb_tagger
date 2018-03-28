@@ -94,11 +94,14 @@ def create_app(script_info=None):
     log_dir = os.path.join(user_data_dir, 'log')
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
+    peewee_logger = logging.getLogger('peewee')
+    peewee_logger.setLevel(logging.INFO)
     default_log_file = os.path.join(log_dir, 'iqdb_tagger_server.log')
     file_handler = TimedRotatingFileHandler(default_log_file, 'midnight')
     file_handler.setLevel(logging.WARNING)
     file_handler.setFormatter(logging.Formatter('<%(asctime)s> <%(levelname)s> %(message)s'))
     app.logger.addHandler(file_handler)
+    app.logger.addHandler(peewee_logger)
     # reloader
     reloader = app.config['TEMPLATES_AUTO_RELOAD'] = \
         bool(os.getenv('IQDB_TAGGER_RELOADER')) or app.config['TEMPLATES_AUTO_RELOAD']  # NOQA

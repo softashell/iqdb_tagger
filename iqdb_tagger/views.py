@@ -20,6 +20,7 @@ class HomeView(AdminIndexView):
         page = request.args.get(get_page_parameter(), type=int, default=1)
         form = forms.ImageUploadForm()
         if form.file.data:
+            print('resize:{}'.format(form.resize.data))
             with NamedTemporaryFile() as temp, NamedTemporaryFile() as thumb_temp:
                 form.file.data.save(temp.name)
                 posted_img = get_posted_image(
@@ -31,7 +32,8 @@ class HomeView(AdminIndexView):
                     .where(ImageMatch.search_place == im_place)
                 if not query.exists():
                     try:
-                        result_page = get_page_result(image=posted_img.path, url=url)
+                        posted_img_path = temp.name if not form.resize.data else thumb_temp.name
+                        result_page = get_page_result(image=posted_img_path, url=url)
                     except requests.exceptions.ConnectionError as e:
                         log.error(str(e))
                         flash('Connection error.')

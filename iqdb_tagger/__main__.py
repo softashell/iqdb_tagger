@@ -69,13 +69,21 @@ def get_posted_image(
 
     img, _ = models.ImageModel.get_or_create_from_path(img_path)
     def_thumb_rel, _ = models.ThumbnailRelationship.get_or_create_from_image(
-        image=img, thumb_folder=output_thumb_folder, size=DEFAULT_SIZE, thumb_path=thumb_path)
+        image=img,
+        thumb_folder=output_thumb_folder,
+        size=DEFAULT_SIZE,
+        thumb_path=thumb_path,
+        img_path=img_path
+    )
     resized_thumb_rel = None
 
     if resize and size:
         resized_thumb_rel, _ = \
             models.ThumbnailRelationship.get_or_create_from_image(
-                image=img, thumb_folder=output_thumb_folder, size=size
+                image=img,
+                thumb_folder=output_thumb_folder,
+                size=size,
+                img_path=img_path
             )
     elif resize:
         # use thumbnail if no size is given
