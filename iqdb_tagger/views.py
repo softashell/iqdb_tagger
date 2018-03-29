@@ -18,7 +18,6 @@ class HomeView(AdminIndexView):
     @expose('/', methods=('GET', 'POST'))
     def index(self):
         """Get index page."""
-        page = request.args.get(get_page_parameter(), type=int, default=1)
         form = forms.ImageUploadForm()
         if form.file.data:
             print('resize:{}'.format(form.resize.data))
@@ -43,6 +42,7 @@ class HomeView(AdminIndexView):
                         page=result_page, image=posted_img, place=im_place))
             return redirect(url_for('match_sha256', checksum=posted_img.checksum))
 
+        page = request.args.get(get_page_parameter(), type=int, default=1)
         item_per_page = 10
         entries = (
             ImageModel.select()
@@ -51,13 +51,18 @@ class HomeView(AdminIndexView):
             .where(ImageMatchRelationship.image)
             .order_by(ImageModel.id.desc())
         )
+        pagination = Pagination(
+            page=page, total=entries.count(), per_page=item_per_page, bs_version=3)
         paginated_entries = entries.paginate(page, item_per_page)
         if not entries.exists() and page != 1:
             abort(404)
         # pagination = Pagination(page, item_per_page, entries.count())
         return self.render(
-            'iqdb_tagger/index.html', entries=paginated_entries,
-            pagination=None, form=form)
+            'iqdb_tagger/index.html',
+            entries=paginated_entries,
+            pagination=pagination,
+            form=form
+        )
 
 
 class MatchView(BaseView):

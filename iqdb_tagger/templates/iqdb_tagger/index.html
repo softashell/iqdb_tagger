@@ -14,7 +14,7 @@
 <div class="container">
   <br>
   {% for entry in entries %}
-    <div class="card-group">
+    <div class="card-group row">
     <p> <a class="mx-auto" href="{{url_for('matchview.match_sha256', checksum=entry.checksum)}}">{{entry.checksum}}</a> </p>
     {% for imr in entry.imagematchrelationship_set[:6] %}
       <div class="card col-lg-2" id="imr-{{imr.id}}">
@@ -39,4 +39,5 @@
   <p>No match found.</p>
   {% endfor %}
 </div>
+{{pagination.links}}
 {% endblock %}
