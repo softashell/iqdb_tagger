@@ -67,7 +67,7 @@ class MatchView(BaseView):
         return self.render('iqdb_tagger/match.html')
 
     @expose('/sha256-<checksum>')
-    def match_sha256(checksum):
+    def match_sha256(self, checksum):
         """Get image match the checksum."""
         entry = models.ImageModel.get(models.ImageModel.checksum == checksum)
         return render_template('iqdb_tagger/match_checksum.html', entry=entry)
