@@ -3,7 +3,7 @@
 {% block body %}
 <div class="container">
   <br>
-  <a href="{{url_for('match_sha256', checksum=entry.image.checksum)}}"> {{entry.image.checksum}} </a>
+  <a href="{{url_for('matchview.match_sha256', checksum=entry.image.checksum)}}"> {{entry.image.checksum}} </a>
   <div class="row justify-content-center">
     <div id='match-image' style="padding:10px">
       <a href="{{entry.match_result.link}}">

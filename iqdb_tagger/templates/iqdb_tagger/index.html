@@ -15,7 +15,7 @@
   <br>
   {% for entry in entries %}
     <div class="card-group">
-    <p> <a class="mx-auto" href="{{url_for('match_sha256', checksum=entry.checksum)}}">{{entry.checksum}}</a> </p>
+    <p> <a class="mx-auto" href="{{url_for('matchview.match_sha256', checksum=entry.checksum)}}">{{entry.checksum}}</a> </p>
     {% for imr in entry.imagematchrelationship_set[:6] %}
       <div class="card col-lg-2" id="imr-{{imr.id}}">
         <a class="mx-auto" href="{{imr.match_result.link}}">
@@ -27,7 +27,7 @@
                 {{imr.imagematch_set[0].similarity}}% {{imr.match_result.size|default('', true)}}<br>
                 {{imr.imagematch_set[0].status_verbose }}<br>
                 {{imr.match_result.link_netloc}}
-                <a href="{{url_for('single_match_detail', pair_id=imr.id)}}">detail</a>
+                <a href="{{url_for('matchview.match_detail', pair_id=imr.id)}}">detail</a>
               </p>
             {% endif %}
         </div>

@@ -54,37 +54,6 @@ def thumb(basename):
     return send_from_directory(thumb_folder, basename)
 
 
-def match_sha256(checksum):
-    """Get image match the checksum."""
-    entry = ImageModel.get(ImageModel.checksum == checksum)
-    return render_template('match.html', entry=entry)
-
-
-def single_match_detail(pair_id):
-    """Show single match pair."""
-    nocache = False
-    entry = ImageMatchRelationship.get(ImageMatchRelationship.id == pair_id)
-
-    match_result = entry.match_result
-    mt_rel = MatchTagRelationship.select().where(
-        MatchTagRelationship.match == match_result)
-    tags = [x.tag.full_name for x in mt_rel]
-    filtered_hosts = ['anime-pictures.net', 'www.theanimegallery.com']
-
-    if urlparse(match_result.link).netloc in filtered_hosts:
-        log.debug(
-            'URL in filtered hosts, no tag fetched', url=match_result.link)
-    elif not tags or nocache:
-        try:
-            tags = list(get_tags_from_match_result(match_result))
-            if not tags:
-                log.debug('Tags not founds', id=pair_id)
-        except requests.exceptions.ConnectionError as e:
-            log.error(str(e), url=match_result.link)
-
-    return render_template('iqdb_tagger/single_match.html', entry=entry)
-
-
 def create_app(script_info=None):
     """create app."""
     app = Flask(__name__)
@@ -135,8 +104,7 @@ def create_app(script_info=None):
         app, name='IQDB Tagger', template_mode='bootstrap3',
         index_view=views.HomeView(name='Home', template='iqdb_tagger/index.html', url='/'))
     # routing
-    app.add_url_rule('/match/d/<pair_id>', view_func=single_match_detail)
-    app.add_url_rule('/match/sha256-<checksum>', view_func=match_sha256)
+    app_admin.add_view(views.MatchView())
     app.add_url_rule('/thumb/<path:basename>', view_func=thumb)
     return app
 

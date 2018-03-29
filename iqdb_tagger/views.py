@@ -1,13 +1,14 @@
 from tempfile import NamedTemporaryFile
-
+from urllib.parse import urlparse
 
 from flask import request, render_template, redirect, url_for
+from flask.ext.admin import BaseView, expose
 from flask_admin import AdminIndexView, expose
 from flask_paginate import Pagination, get_page_parameter
 import requests
 
 from .models import ImageModel, ImageMatchRelationship, ImageMatch
-from . import forms
+from . import forms, models
 from .__main__ import get_posted_image, iqdb_url_dict, get_page_result
 
 
@@ -57,3 +58,41 @@ class HomeView(AdminIndexView):
         return self.render(
             'iqdb_tagger/index.html', entries=paginated_entries,
             pagination=None, form=form)
+
+
+class MatchView(BaseView):
+
+    @expose('/')
+    def index(self):
+        return self.render('iqdb_tagger/match.html')
+
+    @expose('/sha256-<checksum>')
+    def match_sha256(checksum):
+        """Get image match the checksum."""
+        entry = models.ImageModel.get(models.ImageModel.checksum == checksum)
+        return render_template('iqdb_tagger/match_checksum.html', entry=entry)
+
+    @expose('/d/<pair_id>')
+    def match_detail(self, pair_id):
+        """Show single match pair."""
+        nocache = False
+        entry = ImageMatchRelationship.get(ImageMatchRelationship.id == pair_id)
+
+        match_result = entry.match_result
+        mt_rel = models.MatchTagRelationship.select().where(
+            models.MatchTagRelationship.match == match_result)
+        tags = [x.tag.full_name for x in mt_rel]
+        filtered_hosts = ['anime-pictures.net', 'www.theanimegallery.com']
+
+        if urlparse(match_result.link).netloc in filtered_hosts:
+            log.debug(
+                'URL in filtered hosts, no tag fetched', url=match_result.link)
+        elif not tags or nocache:
+            try:
+                tags = list(get_tags_from_match_result(match_result))
+                if not tags:
+                    log.debug('Tags not founds', id=pair_id)
+            except requests.exceptions.ConnectionError as e:
+                log.error(str(e), url=match_result.link)
+        return self.render('iqdb_tagger/match_single.html', entry=entry)
+
