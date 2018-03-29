@@ -1,7 +1,7 @@
 from tempfile import NamedTemporaryFile
 from urllib.parse import urlparse
 
-from flask import request, render_template, redirect, url_for
+from flask import request, render_template, redirect, url_for, current_app
 from flask_admin import AdminIndexView, expose, BaseView
 from flask_paginate import Pagination, get_page_parameter
 import requests
@@ -39,7 +39,7 @@ class HomeView(AdminIndexView):
                         posted_img_path = temp.name if not form.resize.data else thumb_temp.name
                         result_page = get_page_result(image=posted_img_path, url=url)
                     except requests.exceptions.ConnectionError as e:
-                        log.error(str(e))
+                        current_app.logger.error(str(e))
                         flash('Connection error.')
                         return redirect(request.url)
                     list(ImageMatch.get_or_create_from_page(
@@ -78,6 +78,7 @@ class MatchView(BaseView):
     @expose('/sha256-<checksum>')
     def match_sha256(self, checksum):
         """Get image match the checksum."""
+        current_app.logger.debug('match sha256: {}'.format(request.url))
         entry = models.ImageModel.get(models.ImageModel.checksum == checksum)
         return self.render('iqdb_tagger/match_checksum.html', entry=entry)
 
@@ -94,14 +95,14 @@ class MatchView(BaseView):
         filtered_hosts = ['anime-pictures.net', 'www.theanimegallery.com']
 
         if urlparse(match_result.link).netloc in filtered_hosts:
-            log.debug(
-                'URL in filtered hosts, no tag fetched', url=match_result.link)
+            current_app.logger.debug(
+                'URL in filtered hosts, no tag fetched, url:{}'.format(match_result.link))
         elif not tags or nocache:
             try:
                 tags = list(get_tags_from_match_result(match_result))
                 if not tags:
-                    log.debug('Tags not founds', id=pair_id)
+                    current_app.logger.debug('Tags not founds, id:{}'.format(pair_id))
             except requests.exceptions.ConnectionError as e:
-                log.error(str(e), url=match_result.link)
+                current_app.logger.debug(str(e) + 'url:{}'.format(match_result.link))
         return self.render('iqdb_tagger/match_single.html', entry=entry)
 
