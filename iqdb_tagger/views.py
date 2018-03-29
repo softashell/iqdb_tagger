@@ -2,14 +2,18 @@ from tempfile import NamedTemporaryFile
 from urllib.parse import urlparse
 
 from flask import request, render_template, redirect, url_for
-from flask.ext.admin import BaseView, expose
-from flask_admin import AdminIndexView, expose
+from flask_admin import AdminIndexView, expose, BaseView
 from flask_paginate import Pagination, get_page_parameter
 import requests
 
 from .models import ImageModel, ImageMatchRelationship, ImageMatch
 from . import forms, models
-from .__main__ import get_posted_image, iqdb_url_dict, get_page_result
+from .__main__ import (
+    get_page_result,
+    get_posted_image,
+    get_tags_from_match_result,
+    iqdb_url_dict,
+)
 
 
 
@@ -40,7 +44,7 @@ class HomeView(AdminIndexView):
                         return redirect(request.url)
                     list(ImageMatch.get_or_create_from_page(
                         page=result_page, image=posted_img, place=im_place))
-            return redirect(url_for('match_sha256', checksum=posted_img.checksum))
+            return redirect(url_for('matchview.match_sha256', checksum=posted_img.checksum))
 
         page = request.args.get(get_page_parameter(), type=int, default=1)
         item_per_page = 10

@@ -45,7 +45,6 @@ from iqdb_tagger.utils import default_db_path, thumb_folder, user_data_dir
 from iqdb_tagger.forms import ImageUploadForm
 from iqdb_tagger import views
 
-app = Flask(__name__)
 log = structlog.getLogger()
 
 

@@ -25,10 +25,9 @@
                   {{imr.imagematch_set[0].status_verbose }}<br>
                   {{imr.match_result.link_netloc}}
                   <a class='img-match-detail'
-                   data-netloc="{{imr.match_result.link_netloc|replace('.',
-                   '-')}}"
-                   data-status="{{imr.imagematch_set[0].status_verbose|lower|replace('
-                   ', '-')}}" href="{{url_for('matchview.match_detail', pair_id=imr.id)}}"> detail</a>
+                   data-netloc="{{imr.match_result.link_netloc|replace('.', '-')}}"
+                   data-status="{{imr.imagematch_set[0].status_verbose|lower|replace(' ', '-')}}"
+                   href="{{url_for('matchview.match_detail', pair_id=imr.id)}}"> detail</a>
                 </p>
               {% endif %}
           </div>
