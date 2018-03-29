@@ -82,7 +82,7 @@ def single_match_detail(pair_id):
         except requests.exceptions.ConnectionError as e:
             log.error(str(e), url=match_result.link)
 
-    return render_template('single_match.html', entry=entry)
+    return render_template('iqdb_tagger/single_match.html', entry=entry)
 
 
 def create_app(script_info=None):
