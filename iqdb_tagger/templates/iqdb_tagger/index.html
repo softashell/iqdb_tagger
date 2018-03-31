@@ -1,0 +1,43 @@
+{% extends 'admin/base.html' %}
+
+{% block body %}
+<form class="form-horizontal" style="margin-top: 10px" action="{{url_for('admin.index')}}" method="POST" enctype="multipart/form-data">
+  <div class="form-group"> {{form.file.label(class_="col-sm-2 control-label")}} {{form.file()}} </div>
+  <div class="form-group"> {{form.resize.label(class_="col-sm-2 control-label")}} {{form.resize()}} </div>
+  <div class="form-group">
+    {{form.place.label(class_="col-sm-2 control-label")}}
+    <div class="col-sm-2">{{form.place(class_="form-control")}}</div>
+  </div>
+  <div class="form-group"> <div class="col-sm-offset-2 col-sm-10"> <button type="submit" class="btn btn-default">Submit</button> </div> </div>
+</form>
+
+<div class="container">
+  <br>
+  {% for entry in entries %}
+    <div class="card-group row">
+    <p> <a class="mx-auto" href="{{url_for('matchview.match_sha256', checksum=entry.checksum)}}">{{entry.checksum}}</a> </p>
+    {% for imr in entry.imagematchrelationship_set[:6] %}
+      <div class="card col-lg-2" id="imr-{{imr.id}}">
+        <a class="mx-auto" href="{{imr.match_result.link}}">
+          <img style="max-width:150px;" class="card-img-top" src="{{imr.match_result.iqdb_thumb}}">
+        </a>
+        <div class="card-block">
+            {% if imr.imagematch_set|length == 1 %}
+              <p class="card-text" style="word-wrap:break-word;">
+                {{imr.imagematch_set[0].similarity}}% {{imr.match_result.size|default('', true)}}<br>
+                {{imr.imagematch_set[0].status_verbose }}<br>
+                {{imr.match_result.link_netloc}}
+                <a href="{{url_for('matchview.match_detail', pair_id=imr.id)}}">detail</a>
+              </p>
+            {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+    </div>
+    <br>
+  {% else %}
+  <p>No match found.</p>
+  {% endfor %}
+</div>
+{{pagination.links}}
+{% endblock %}

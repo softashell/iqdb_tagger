@@ -2,3 +2,4 @@ include README.rst
 include requirements.txt
 recursive-include iqdb_tagger/templates *
 recursive-include iqdb_tagger/static *
+recursive-include iqdb_tagger/templates/iqdb_tagger *

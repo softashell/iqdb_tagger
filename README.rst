@@ -29,7 +29,7 @@ To parse folder of images (e.g. in this example :code:`image_folder:`) and write
 
 .. code:: bash
 
-    iqdb-tagger --resize --match-filter best-match --write-tags --input-mode folder image_folder
+    iqdb-tagger run --resize --match-filter best-match --write-tags --input-mode folder image_folder
 
 
 Use as Hydrus iqdb script server
@@ -39,19 +39,13 @@ Use as Hydrus iqdb script server
 3. Import one of the parsing scripts below to Hydrus parsing scripts.
 4. Check the server address and edit it as needed.
 
-Danbooru parsing script
-
-.. code:: json
-
-    [32, "local iqdb danbooru", 1, ["http://127.0.0.1:5000/?place=danbooru&resize", 1, 0, 0, "file", {}, [[29, 1, ["link to danbooru", [27, 2, [[["a", {"data-status": "best-match", "data-netloc": "danbooru-donmai"}, 0]], "href", [0, 0, "", ""]]], [[30, 1, ["", 0, [27, 2, [[["section", {"id": "tag-list"}, 0], ["li", {"class": "category-1"}, null], ["a", {"class": "search-tag"}, 0]], null, [0, 0, "", ""]]], "creator"]], [30, 1, ["", 0, [27, 2, [[["section", {"id": "tag-list"}, 0], ["li", {"class": "category-3"}, null], ["a", {"class": "search-tag"}, 0]], null, [0, 0, "", ""]]], "series"]], [30, 1, ["", 0, [27, 2, [[["section", {"id": "tag-list"}, 0], ["li", {"class": "category-4"}, null], ["a", {"class": "search-tag"}, 0]], null, [0, 0, "", ""]]], "character"]], [30, 1, ["", 0, [27, 2, [[["section", {"id": "tag-list"}, 0], ["li", {"class": "category-0"}, null], ["a", {"class": "search-tag"}, 0]], null, [0, 0, "", ""]]], ""]]]]]]]]
-
 IQDB parsing script
 
 .. code:: json
 
-    [32, "local iqdb tag cache", 1, ["http://127.0.0.1:5000/?resize", 1, 0, 0, "file", {}, [[29, 1, ["link to local cache", [27, 2, [[["a", {"data-status": "best-match", "class": "img-match-detail"}, null]], "href", [0, 0, "", ""]]], [[30, 1, ["", 0, [27, 2, [[["ul", {"id": "tag-info-list"}, 0], ["li", {"class": "tag-creator"}, null]], null, [0, 0, "", ""]]], "creator"]], [30, 1, ["", 0, [27, 2, [[["ul", {"id": "tag-info-list"}, 0], ["li", {"class": "tag-character"}, null]], null, [0, 0, "", ""]]], "character"]], [30, 1, ["", 0, [27, 2, [[["ul", {"id": "tag-info-list"}, 0], ["li", {"class": "tag-series"}, null]], null, [0, 0, "", ""]]], "series"]], [30, 1, ["", 0, [27, 2, [[["ul", {"id": "tag-info-list"}, 0], ["li", {"class": "tag-general"}, null]], null, [0, 0, "", ""]]], ""]], [30, 1, ["", 0, [27, 2, [[["ul", {"id": "tag-info-list"}, 0], ["li", {"class": "tag-meta"}, null]], null, [0, 0, "", ""]]], "meta"]], [30, 1, ["", 0, [27, 2, [[["ul", {"id": "tag-info-list"}, 0], ["li", {"class": "tag-circle"}, null]], null, [0, 0, "", ""]]], "circle"]], [30, 1, ["", 0, [27, 2, [[["ul", {"id": "tag-info-list"}, 0], ["li", {"class": "tag-style"}, null]], null, [0, 0, "", ""]]], "style"]]]]]]]]
+    [32, "local iqdb", 2, ["http://127.0.0.1:5006", 1, 0, [55, 1, [[], "some hash bytes"]], "file", {"place": "0", "resize": "on"}, [[29, 1, ["link", [27, 5, [[["a", {"data-status": "best-match", "class": "img-match-detail"}, null]], 0, "href", [51, 1, [3, "", null, null, "example string"]], [55, 1, [[], "parsed information"]]]], [[30, 2, ["", 0, [27, 5, [[["li", {"class": "tag-creator"}, null]], 1, "", [51, 1, [3, "", null, null, "example string"]], [55, 1, [[], "parsed information"]]]], "creator"]], [30, 2, ["", 0, [27, 5, [[["li", {"class": "tag-series"}, null]], 1, "", [51, 1, [3, "", null, null, "example string"]], [55, 1, [[], "parsed information"]]]], "series"]], [30, 2, ["", 0, [27, 5, [[["li", {"class": "tag-character"}, null]], 1, "", [51, 1, [3, "", null, null, "example string"]], [55, 1, [[], "parsed information"]]]], "character"]], [30, 2, ["", 0, [27, 5, [[["li", {"class": "tag-general"}, null]], 1, "", [51, 1, [3, "", null, null, "example string"]], [55, 1, [[], "parsed information"]]]], ""]]]]]]]]
 
-Every uploaded and match history can be seen on Front page (in this case http://127.0.0.1:5000).
+Every uploaded and match history can be seen on Front page (in this case http://127.0.0.1:5006).
 
 Installation
 ------------
@@ -66,7 +60,7 @@ Or install it manually
 
 .. code:: bash
 
-    $ git clone https://github.com/rachmadaniHaryono/iqdb_tagger.git
+    $ git clone https://github.com/softashell/iqdb_tagger.git
     $ cd iqdb_tagger
     # run the command below
     $ python setup.py install
@@ -80,6 +74,13 @@ To install under python3 follow the instruction on this link https://stackoverfl
 
 CHANGELOG
 ---------
+
+0.2.0 (2018-03-31)
+``````````````````
+
+- new argument :code:`write-tags` to write parsed tag to text file
+- both cli and server now don't create thumbnail anymore
+- main cli command is moved to :code:`run` command
 
 0.1.0 (2018-02-26)
 ``````````````````

@@ -342,7 +342,8 @@ class ThumbnailRelationship(BaseModel):
     thumbnail = ForeignKeyField(ImageModel)
 
     @staticmethod
-    def get_or_create_from_image(image, size, thumb_folder=None):
+    def get_or_create_from_image(
+            image, size, thumb_folder=None, thumb_path=None, img_path=None):
         """Get or create from image."""
         thumbnails = [
             x for x in image.thumbnails
@@ -351,11 +352,12 @@ class ThumbnailRelationship(BaseModel):
         if thumbnails:
             assert len(thumbnails) == 1, "There was not one thumbnail for the result"
             return thumbnails[0], False
-        thumb_path = '{}-{}-{}.jpg'.format(image.checksum, size[0], size[1])
-        if thumb_folder:
-            thumb_path = os.path.join(thumb_folder, thumb_path)
+        if thumb_path is None:
+            thumb_path = '{}-{}-{}.jpg'.format(image.checksum, size[0], size[1])
+            if thumb_folder:
+                thumb_path = os.path.join(thumb_folder, thumb_path)
         if not os.path.isfile(thumb_path) or os.path.getsize(thumb_path) == 0:
-            im = Image.open(image.path)
+            im = Image.open(image.path) if img_path is None else Image.open(img_path)
             im.thumbnail(size, Image.ANTIALIAS)
             try:
                 im.save(thumb_path, 'JPEG')

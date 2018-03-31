@@ -1,221 +1,100 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """server module."""
+from logging.handlers import TimedRotatingFileHandler
+import logging
 import os
-from math import ceil
-from tempfile import gettempdir
-from urllib.parse import urlparse
+import pprint
 
-import click
-import requests
-import structlog
 from flask import (
     Flask,
-    abort,
-    flash,
-    redirect,
-    render_template,
-    request,
     send_from_directory,
-    url_for
 )
-from werkzeug.utils import secure_filename
+from flask.cli import FlaskGroup
+from flask_admin import Admin
+# from flask_admin.contrib.peewee import ModelView
+import click
+import structlog
 
-from iqdb_tagger.__main__ import (
-    DEFAULT_PLACE,
-    get_page_result,
-    get_posted_image,
-    get_tags_from_match_result,
-    init_program,
-    iqdb_url_dict
-)
-from iqdb_tagger.models import (
-    ImageMatch,
-    ImageMatchRelationship,
-    ImageModel,
-    MatchTagRelationship,
-    init_db
-)
+from iqdb_tagger.__main__ import init_program
+from iqdb_tagger.models import init_db
 from iqdb_tagger.utils import default_db_path, thumb_folder, user_data_dir
+from iqdb_tagger import views
 
-app = Flask(__name__)
 log = structlog.getLogger()
 
 
-@app.route('/thumb/<path:basename>')
 def thumb(basename):
     """Get thumbnail."""
     return send_from_directory(thumb_folder, basename)
 
 
-class Pagination(object):
-    """Pagination object."""
+def create_app(script_info=None):
+    """Create app."""
+    app = Flask(__name__)
+    # logging
+    if not os.path.exists(user_data_dir):
+        os.makedirs(user_data_dir)
+    log_dir = os.path.join(user_data_dir, 'log')
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    peewee_logger = logging.getLogger('peewee')
+    peewee_logger.setLevel(logging.INFO)
+    chardet_logger = logging.getLogger('chardet')
+    chardet_logger.setLevel(logging.INFO)
+    default_log_file = os.path.join(log_dir, 'iqdb_tagger_server.log')
+    file_handler = TimedRotatingFileHandler(default_log_file, 'midnight')
+    file_handler.setLevel(logging.WARNING)
+    file_handler.setFormatter(logging.Formatter('<%(asctime)s> <%(levelname)s> %(message)s'))
+    app.logger.addHandler(file_handler)
+    app.logger.addHandler(peewee_logger)
+    app.logger.addHandler(chardet_logger)
+    # reloader
+    reloader = app.config['TEMPLATES_AUTO_RELOAD'] = \
+        bool(os.getenv('IQDB_TAGGER_RELOADER')) or app.config['TEMPLATES_AUTO_RELOAD']  # NOQA
+    if reloader:
+        app.jinja_env.auto_reload = True
+    app.config['SECRET_KEY'] = os.getenv('IQDB_TAGGER_SECRET_KEY') or os.urandom(24)
+    app.config['WTF_CSRF_ENABLED'] = False
+    # debug
+    debug = app.config['DEBUG'] = bool(os.getenv('IQDB_TAGGER_DEBUG')) or app.config['DEBUG']
+    if debug:
+        app.config['DEBUG'] = True
+        app.config['LOGGER_HANDLER_POLICY'] = 'debug'
+        logging.basicConfig(level=logging.DEBUG)
+        pprint.pprint(app.config)
+        print('Log file: {}'.format(default_log_file))
+        print('script info:{}'.format(script_info))
+    db_path = os.getenv('IQDB_TAGGER_DB_PATH') or default_db_path
+    init_program()
+    init_db(db_path)
+    # app and db
+    app.app_context().push()
 
-    def __init__(self, page, per_page, total_count):
-        """Init method."""
-        self.page = page
-        self.per_page = per_page
-        self.total_count = total_count
+    @app.shell_context_processor
+    def shell_context():  # pylint: disable=unused-variable
+        return {'app': app}
 
-    @property
-    def pages(self):
-        """Get pages."""
-        return int(ceil(self.total_count / float(self.per_page)))
+    # flask-admin
+    app_admin = Admin(
+        app, name='IQDB Tagger', template_mode='bootstrap3',
+        index_view=views.HomeView(name='Home', template='iqdb_tagger/index.html', url='/'))
 
-    @property
-    def has_prev(self):
-        """Check if it have previous page."""
-        return self.page > 1
-
-    @property
-    def has_next(self):
-        """Check if it have next page."""
-        return self.page < self.pages
-
-    def iter_pages(
-            self, left_edge=2, left_current=2, right_current=5, right_edge=2):
-        """Iterate pages."""
-        last = 0
-        for num in range(1, self.pages + 1):
-            if num <= left_edge or (
-                num > self.page - left_current - 1 and
-                num < self.page + right_current
-            ) or num > self.pages - right_edge:
-                if last + 1 != num:
-                    yield None
-                yield num
-                last = num
-
-
-@app.route('/', methods=['GET', 'POST'], defaults={'page': 1})
-@app.route('/page/<int:page>')
-def index(page):
-    """Get index page."""
-    if not os.path.isdir(user_data_dir):
-        os.makedirs(user_data_dir, exist_ok=True)
-    if request.method == 'POST':
-        # check if the post request has the file part
-        if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
-        file = request.files['file']
-        # if user does not select file, browser also
-        # submit a empty part without filename
-        if file.filename == '':
-            flash('No selected file')
-            return redirect(request.url)
-        if file:
-            upload_folder = gettempdir()
-            filename = os.path.join(
-                upload_folder, secure_filename(file.filename))
-            log.debug('file saved', p=filename)
-            file.save(filename)
-        else:
-            flash('Error uploading file.')
-            return redirect(request.url)
-        size = None
-        if 'resize' in request.args:
-            resize = True
-            resize_value = request.args.get('resize')
-            if resize_value and 'x' in resize_value:
-                resize_value_parts = resize_value.split('x')
-                size = int(resize_value_parts[0]), (resize_value_parts[1])
-        else:
-            resize = False
-        init_db(default_db_path)
-        posted_img = get_posted_image(
-            img_path=filename, resize=resize, size=size)
-        place = request.args.get('place', DEFAULT_PLACE)
-        url, im_place = iqdb_url_dict[place]
-        query = posted_img.imagematchrelationship_set \
-            .select().join(ImageMatch) \
-            .where(ImageMatch.search_place == im_place)
-        if not query.exists():
-            try:
-                result_page = get_page_result(image=posted_img.path, url=url)
-            except requests.exceptions.ConnectionError as e:
-                log.error(str(e))
-                flash('Connection error.')
-                return redirect(request.url)
-            list(ImageMatch.get_or_create_from_page(
-                page=result_page, image=posted_img, place=im_place))
-        return redirect(url_for('match_sha256', checksum=posted_img.checksum))
-    init_db(default_db_path)
-    item_per_page = 10
-    entries = (
-        ImageModel.select()
-        .distinct()
-        .join(ImageMatchRelationship)
-        .where(ImageMatchRelationship.image)
-        .order_by(ImageModel.id.desc())
-    )
-    paginated_entries = entries.paginate(page, item_per_page)
-    if not entries.exists() and page != 1:
-        abort(404)
-    pagination = Pagination(page, item_per_page, entries.count())
-    return render_template(
-        'index.html', entries=paginated_entries, pagination=pagination)
+    app_admin.add_view(views.MatchView())
+    # app_admin.add_view(ModelView(ImageMatch, category='DB'))
+    # app_admin.add_view(ModelView(ImageMatchRelationship, category='DB'))
+    # app_admin.add_view(ModelView(ImageModel, category='DB'))
+    # app_admin.add_view(ModelView(MatchTagRelationship, category='DB'))
+    # routing
+    app.add_url_rule('/thumb/<path:basename>', view_func=thumb)
+    return app
 
 
-@app.route('/match/sha256-<checksum>', methods=['GET', 'POST'])
-def match_sha256(checksum):
-    """Get image match the checksum."""
-    init_db()
-    entry = ImageModel.get(ImageModel.checksum == checksum)
-    return render_template('match.html', entry=entry)
-
-
-@app.route('/match/d/<pair_id>', methods=['GET'])
-def single_match_detail(pair_id):
-    """Show single match pair."""
-    init_db()
-    nocache = False
-    entry = ImageMatchRelationship.get(ImageMatchRelationship.id == pair_id)
-
-    match_result = entry.match_result
-    mt_rel = MatchTagRelationship.select().where(
-        MatchTagRelationship.match == match_result)
-    tags = [x.tag.full_name for x in mt_rel]
-    filtered_hosts = ['anime-pictures.net', 'www.theanimegallery.com']
-
-    if urlparse(match_result.link).netloc in filtered_hosts:
-        log.debug(
-            'URL in filtered hosts, no tag fetched', url=match_result.link)
-    elif not tags or nocache:
-        try:
-            tags = list(get_tags_from_match_result(match_result))
-            if not tags:
-                log.debug('Tags not founds', id=pair_id)
-        except requests.exceptions.ConnectionError as e:
-            log.error(str(e), url=match_result.link)
-
-    return render_template('single_match.html', entry=entry)
-
-
-@click.group()
+@click.group(cls=FlaskGroup, create_app=create_app)
 def cli():
-    """CLI func."""
+    """Run cli. This is a management script for application."""
     pass
 
 
-@cli.command()
-def init():
-    """Init program."""
-    init_program()
-
-
-@cli.command()
-@click.option('--debug/--no-debug', default=False)
-def start(debug):
-    """Start server."""
-    # compatibility
-    app.run(debug=debug, threaded=True)
-
-
-def main():
-    """Run main function."""
-    cli()
-
-
 if __name__ == '__main__':
-    main()
+    cli()
