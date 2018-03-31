@@ -53,7 +53,7 @@ setup(
     install_requires=install_requires,
     entry_points={
         'console_scripts': [
-            'iqdb-tagger = iqdb_tagger.__main__:main',
+            'iqdb-tagger = iqdb_tagger.__main__:cli',
             'iqdb-tagger-server = iqdb_tagger.server:cli',
         ]
     }

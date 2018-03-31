@@ -29,7 +29,7 @@ To parse folder of images (e.g. in this example :code:`image_folder:`) and write
 
 .. code:: bash
 
-    iqdb-tagger --resize --match-filter best-match --write-tags --input-mode folder image_folder
+    iqdb-tagger run --resize --match-filter best-match --write-tags --input-mode folder image_folder
 
 
 Use as Hydrus iqdb script server
@@ -38,12 +38,6 @@ Use as Hydrus iqdb script server
 2. Run :code:`iqdb-tagger-server start` and note the server address.
 3. Import one of the parsing scripts below to Hydrus parsing scripts.
 4. Check the server address and edit it as needed.
-
-Danbooru parsing script
-
-.. code:: json
-
-    [32, "local iqdb danbooru", 1, ["http://127.0.0.1:5000/?place=danbooru&resize", 1, 0, 0, "file", {}, [[29, 1, ["link to danbooru", [27, 2, [[["a", {"data-status": "best-match", "data-netloc": "danbooru-donmai"}, 0]], "href", [0, 0, "", ""]]], [[30, 1, ["", 0, [27, 2, [[["section", {"id": "tag-list"}, 0], ["li", {"class": "category-1"}, null], ["a", {"class": "search-tag"}, 0]], null, [0, 0, "", ""]]], "creator"]], [30, 1, ["", 0, [27, 2, [[["section", {"id": "tag-list"}, 0], ["li", {"class": "category-3"}, null], ["a", {"class": "search-tag"}, 0]], null, [0, 0, "", ""]]], "series"]], [30, 1, ["", 0, [27, 2, [[["section", {"id": "tag-list"}, 0], ["li", {"class": "category-4"}, null], ["a", {"class": "search-tag"}, 0]], null, [0, 0, "", ""]]], "character"]], [30, 1, ["", 0, [27, 2, [[["section", {"id": "tag-list"}, 0], ["li", {"class": "category-0"}, null], ["a", {"class": "search-tag"}, 0]], null, [0, 0, "", ""]]], ""]]]]]]]]
 
 IQDB parsing script
 

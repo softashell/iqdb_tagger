@@ -1,9 +1,11 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 """main module."""
+from tempfile import NamedTemporaryFile
+from urllib.parse import urlparse
 import logging
 import os
-from urllib.parse import urlparse
+import shutil
 
 import cfscrape
 import click
@@ -116,8 +118,7 @@ def init_program(db_path=None):
 def get_tags_from_match_result(match_result, browser=None, scraper=None):
     """Get tags from match result."""
     if browser is None:
-        browser = mechanicalsoup.StatefulBrowser(
-            soup_config={'features': 'lxml'})
+        browser = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
         browser.raise_on_404 = True
 
     res = models.MatchTagRelationship.select().where(
@@ -128,9 +129,7 @@ def get_tags_from_match_result(match_result, browser=None, scraper=None):
     is_url_in_filtered_hosts = urlparse(match_result.link).netloc in \
         filtered_hosts
     if is_url_in_filtered_hosts:
-        log.debug(
-            'URL in filtered hosts, no tag fetched',
-            url=match_result.link)
+        log.debug('URL in filtered hosts, no tag fetched', url=match_result.link)
     elif not tags:
         try:
             browser.open(match_result.link, timeout=10)
@@ -154,35 +153,51 @@ def get_tags_from_match_result(match_result, browser=None, scraper=None):
     return tags
 
 
+def write_url_from_match_result(match_result, folder=None):
+    netloc = urlparse(match_result.link).netloc
+    sanitized_netloc = netloc.replace('.', '_')
+    text_file_basename = sanitized_netloc + '.txt'
+    text_file = os.path.join(folder, text_file_basename) if folder is not None else text_file_basename
+    with open(text_file, 'a') as f:
+        f.write(match_result.link)
+        f.write('\n')
+
+
 def run_program_for_single_img(
-        image, resize, size, place, match_filter, write_tags, browser,
-        scraper, disable_tag_print=False
+        image, resize, size, place, match_filter, browser,
+        scraper, disable_tag_print=False, write_tags=False, write_url=False
 ):
     """Run program for single image."""
     # compatibility
     br = browser
 
     error_set = []
-    post_img = get_posted_image(img_path=image, resize=resize, size=size)
     tag_textfile = image + '.txt'
-
+    folder = os.path.dirname(image)
     result = []
-    for img_m_rel_set in post_img.imagematchrelationship_set:
-        for item_set in img_m_rel_set.imagematch_set:
-            if item_set.search_place_verbose == place:
-                result.append(item_set)
 
-    if not result:
-        url, im_place = iqdb_url_dict[place]
-        use_requests = True if place != 'e621' else False
-        page = get_page_result(
-            image=post_img.path, url=url, browser=br,
-            use_requests=use_requests
-        )
-        # if ok, will output: <Response [200]>
-        result = list(models.ImageMatch.get_or_create_from_page(
-            page=page, image=post_img, place=im_place))
-        result = [x[0] for x in result]
+    with NamedTemporaryFile() as temp, NamedTemporaryFile() as thumb_temp:
+        shutil.copyfile(image, temp.name)
+        post_img = get_posted_image(img_path=temp.name, resize=resize, size=size,
+                thumb_path=thumb_temp.name)
+
+        for img_m_rel_set in post_img.imagematchrelationship_set:
+            for item_set in img_m_rel_set.imagematch_set:
+                if item_set.search_place_verbose == place:
+                    result.append(item_set)
+
+        if not result:
+            url, im_place = iqdb_url_dict[place]
+            use_requests = True if place != 'e621' else False
+            post_img_path = temp.name if not resize else thumb_temp.name
+            page = get_page_result(
+                image=post_img_path, url=url, browser=br,
+                use_requests=use_requests
+            )
+            # if ok, will output: <Response [200]>
+            result = list(models.ImageMatch.get_or_create_from_page(
+                page=page, image=post_img, place=im_place))
+            result = [x[0] for x in result]
 
     if match_filter == 'best-match':
         result = [x for x in result if x.status == x.STATUS_BEST_MATCH]
@@ -202,14 +217,14 @@ def run_program_for_single_img(
             log.debug('{} tag(s) founds'.format(len(tags_verbose)))
             if tags and not disable_tag_print:
                 print('\n'.join(tags_verbose))
-            else:
-                log.debug('No printing tags.')
 
             if tags and write_tags:
                 with open(tag_textfile, 'a') as f:
                     f.write('\n'.join(tags_verbose))
                     f.write('\n')
                 log.debug('tags written')
+            if write_url:
+                write_url_from_match_result(match_result, folder)
         except Exception as e:  # pylint:disable=broad-except
             log.error('Error', e=str(e))
             error_set.append(e)
@@ -217,7 +232,12 @@ def run_program_for_single_img(
     return {'error': error_set}
 
 
-@click.command()
+@click.group()
+def cli():
+    pass
+
+
+@cli.command()
 @click.option(
     '--place', type=click.Choice([x for x in iqdb_url_dict]),
     default=DEFAULT_PLACE,
@@ -230,8 +250,8 @@ def run_program_for_single_img(
     '--match-filter', type=click.Choice(['default', 'best-match']),
     default='default', help='Filter the result.'
 )
-@click.option(
-    '--write-tags', is_flag=True, help='Write best match\'s tags to text.')
+@click.option('--write-tags', is_flag=True, help='Write best match\'s tags to text.')
+@click.option('--write-url', is_flag=True, help='Write match url to text.')
 @click.option(
     '--input-mode', type=click.Choice(['default', 'folder']),
     default='default', help='Set input mode.'
@@ -241,11 +261,11 @@ def run_program_for_single_img(
 @click.option(
     '--abort-on-error', is_flag=True, help='Stop program when error occured')
 @click.argument('prog-input')
-def main(
+def run(
     prog_input=None, resize=False, size=None,
     db_path=None, place=DEFAULT_PLACE, match_filter='default',
-    write_tags=False, input_mode='default', verbose=False, debug=False,
-    abort_on_error=False
+    input_mode='default', verbose=False, debug=False,
+    abort_on_error=False, write_tags=False, write_url=False
 
 ):
     """Get similar image from iqdb."""
@@ -281,8 +301,9 @@ def main(
             result = {}
             try:
                 result = run_program_for_single_img(
-                    ff, resize, size, place, match_filter, write_tags,
-                    browser=br, scraper=scraper, disable_tag_print=True
+                    ff, resize, size, place, match_filter,
+                    browser=br, scraper=scraper, disable_tag_print=True,
+                    write_tags=write_tags, write_url=write_url
                 )
             except Exception as e:  # pylint:disable=broad-except
                 if abort_on_error:
@@ -293,8 +314,9 @@ def main(
     else:
         image = prog_input
         result = run_program_for_single_img(
-            image, resize, size, place, match_filter, write_tags,
-            browser=br, scraper=scraper
+            image, resize, size, place, match_filter,
+            browser=br, scraper=scraper,
+            write_tags=write_tags, write_url=write_url
         )
         if result is not None and result.get('error'):
             error_set.extend([(image, x) for x in result['error']])
