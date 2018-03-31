@@ -75,6 +75,13 @@ To install under python3 follow the instruction on this link https://stackoverfl
 CHANGELOG
 ---------
 
+0.2.0 (2018-03-31)
+``````````````````
+
+- new argument :code:`write-tags` to write parsed tag to text file
+- both cli and server now don't create thumbnail anymore
+- main cli command is moved to :code:`run` command
+
 0.1.0 (2018-02-26)
 ``````````````````
 
