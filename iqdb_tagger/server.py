@@ -2,49 +2,24 @@
 # -*- coding: utf-8 -*-
 """server module."""
 from logging.handlers import TimedRotatingFileHandler
-from math import ceil
-from tempfile import gettempdir
-from urllib.parse import urlparse
 import logging
 import os
 import pprint
 
 from flask import (
     Flask,
-    abort,
-    flash,
-    redirect,
-    render_template,
-    request,
     send_from_directory,
-    url_for
 )
 from flask.cli import FlaskGroup
-from flask_admin import Admin, BaseView, expose
-from flask_admin.contrib.peewee import ModelView
-from werkzeug.utils import secure_filename
+from flask_admin import Admin
+# from flask_admin.contrib.peewee import ModelView
 import click
-import requests
 import structlog
 
-from iqdb_tagger.__main__ import (
-    DEFAULT_PLACE,
-    get_page_result,
-    get_posted_image,
-    get_tags_from_match_result,
-    init_program,
-    iqdb_url_dict
-)
-from iqdb_tagger.models import (
-    ImageMatch,
-    ImageMatchRelationship,
-    ImageModel,
-    MatchTagRelationship,
-    init_db
-)
+from iqdb_tagger.__main__ import init_program
+from iqdb_tagger.models import init_db
 from iqdb_tagger.utils import default_db_path, thumb_folder, user_data_dir
-from iqdb_tagger.forms import ImageUploadForm
-from iqdb_tagger import views, models
+from iqdb_tagger import views
 
 log = structlog.getLogger()
 
@@ -55,7 +30,7 @@ def thumb(basename):
 
 
 def create_app(script_info=None):
-    """create app."""
+    """Create app."""
     app = Flask(__name__)
     # logging
     if not os.path.exists(user_data_dir):
@@ -89,6 +64,7 @@ def create_app(script_info=None):
         logging.basicConfig(level=logging.DEBUG)
         pprint.pprint(app.config)
         print('Log file: {}'.format(default_log_file))
+        print('script info:{}'.format(script_info))
     db_path = os.getenv('IQDB_TAGGER_DB_PATH') or default_db_path
     init_program()
     init_db(db_path)
@@ -96,7 +72,7 @@ def create_app(script_info=None):
     app.app_context().push()
 
     @app.shell_context_processor
-    def shell_context():
+    def shell_context():  # pylint: disable=unused-variable
         return {'app': app}
 
     # flask-admin
@@ -116,7 +92,7 @@ def create_app(script_info=None):
 
 @click.group(cls=FlaskGroup, create_app=create_app)
 def cli():
-    """This is a management script for application."""
+    """Run cli. This is a management script for application."""
     pass
 
 

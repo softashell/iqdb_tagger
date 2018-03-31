@@ -7,7 +7,7 @@ import vcr
 from click.testing import CliRunner
 from PIL import Image
 
-from iqdb_tagger.__main__ import get_posted_image, init_program, main
+from iqdb_tagger.__main__ import get_posted_image, init_program, run
 from iqdb_tagger.models import ImageModel, ThumbnailRelationship
 
 logging.basicConfig()
@@ -70,7 +70,7 @@ def test_main(tmpdir, tmp_img):  # pylint:disable=redefined-outer-name
 
     runner = CliRunner()
     result = runner.invoke(
-        main, [
+        run, [
             '--db-path', db_path.strpath, '--resize',
             '--match-filter', 'best-match', img_path.strpath
         ]

@@ -154,6 +154,7 @@ def get_tags_from_match_result(match_result, browser=None, scraper=None):
 
 
 def write_url_from_match_result(match_result, folder=None):
+    """Write url from match result."""
     netloc = urlparse(match_result.link).netloc
     sanitized_netloc = netloc.replace('.', '_')
     text_file_basename = sanitized_netloc + '.txt'
@@ -178,8 +179,8 @@ def run_program_for_single_img(
 
     with NamedTemporaryFile() as temp, NamedTemporaryFile() as thumb_temp:
         shutil.copyfile(image, temp.name)
-        post_img = get_posted_image(img_path=temp.name, resize=resize, size=size,
-                thumb_path=thumb_temp.name)
+        post_img = get_posted_image(
+            img_path=temp.name, resize=resize, size=size, thumb_path=thumb_temp.name)
 
         for img_m_rel_set in post_img.imagematchrelationship_set:
             for item_set in img_m_rel_set.imagematch_set:
@@ -234,6 +235,7 @@ def run_program_for_single_img(
 
 @click.group()
 def cli():
+    """Run cli."""
     pass
 
 
@@ -328,4 +330,4 @@ def run(
 
 
 if __name__ == '__main__':
-    main()
+    cli()

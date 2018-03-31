@@ -342,8 +342,8 @@ class ThumbnailRelationship(BaseModel):
     thumbnail = ForeignKeyField(ImageModel)
 
     @staticmethod
-    def get_or_create_from_image(image, size, thumb_folder=None,
-            thumb_path=None, img_path=None):
+    def get_or_create_from_image(
+            image, size, thumb_folder=None, thumb_path=None, img_path=None):
         """Get or create from image."""
         thumbnails = [
             x for x in image.thumbnails

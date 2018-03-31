@@ -1,7 +1,8 @@
+"""views module."""
 from tempfile import NamedTemporaryFile
 from urllib.parse import urlparse
 
-from flask import request, render_template, redirect, url_for, current_app
+from flask import request, redirect, url_for, current_app, flash, abort
 from flask_admin import AdminIndexView, expose, BaseView
 from flask_paginate import Pagination, get_page_parameter
 import requests
@@ -16,8 +17,8 @@ from .__main__ import (
 )
 
 
-
 class HomeView(AdminIndexView):
+    """Home view."""
 
     @expose('/', methods=('GET', 'POST'))
     def index(self):
@@ -70,9 +71,11 @@ class HomeView(AdminIndexView):
 
 
 class MatchView(BaseView):
+    """Match view."""
 
     @expose('/')
     def index(self):
+        """Index page."""
         return self.render('iqdb_tagger/match.html')
 
     @expose('/sha256-<checksum>')
@@ -105,4 +108,3 @@ class MatchView(BaseView):
             except requests.exceptions.ConnectionError as e:
                 current_app.logger.debug(str(e) + 'url:{}'.format(match_result.link))
         return self.render('iqdb_tagger/match_single.html', entry=entry)
-
