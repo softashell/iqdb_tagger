@@ -27,6 +27,7 @@ install_requires = [
     'peewee>=2.10.1',
     'Pillow>=4.2.1',
     'structlog>=17.2.0',
+    'wtf-peewee>=3.0.0',
 ]
 
 setup(

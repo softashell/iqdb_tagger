@@ -20,11 +20,12 @@ from flask import (
     url_for
 )
 from flask.cli import FlaskGroup
+from flask_admin import Admin, BaseView, expose
+from flask_admin.contrib.peewee import ModelView
 from werkzeug.utils import secure_filename
 import click
 import requests
 import structlog
-from flask_admin import Admin, BaseView, expose
 
 from iqdb_tagger.__main__ import (
     DEFAULT_PLACE,
@@ -43,7 +44,7 @@ from iqdb_tagger.models import (
 )
 from iqdb_tagger.utils import default_db_path, thumb_folder, user_data_dir
 from iqdb_tagger.forms import ImageUploadForm
-from iqdb_tagger import views
+from iqdb_tagger import views, models
 
 log = structlog.getLogger()
 
@@ -102,8 +103,13 @@ def create_app(script_info=None):
     app_admin = Admin(
         app, name='IQDB Tagger', template_mode='bootstrap3',
         index_view=views.HomeView(name='Home', template='iqdb_tagger/index.html', url='/'))
-    # routing
+
     app_admin.add_view(views.MatchView())
+    # app_admin.add_view(ModelView(ImageMatch, category='DB'))
+    # app_admin.add_view(ModelView(ImageMatchRelationship, category='DB'))
+    # app_admin.add_view(ModelView(ImageModel, category='DB'))
+    # app_admin.add_view(ModelView(MatchTagRelationship, category='DB'))
+    # routing
     app.add_url_rule('/thumb/<path:basename>', view_func=thumb)
     return app
 
