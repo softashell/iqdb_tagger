@@ -179,8 +179,11 @@ def run_program_for_single_img(
 
     with NamedTemporaryFile() as temp, NamedTemporaryFile() as thumb_temp:
         shutil.copyfile(image, temp.name)
-        post_img = get_posted_image(
-            img_path=temp.name, resize=resize, size=size, thumb_path=thumb_temp.name)
+        try:
+            post_img = get_posted_image(
+                img_path=temp.name, resize=resize, size=size, thumb_path=thumb_temp.name)
+        except OSError as e:
+            raise OSError(str(e) + ' when processing {}'.format(image))
 
         for img_m_rel_set in post_img.imagematchrelationship_set:
             for item_set in img_m_rel_set.imagematch_set:
