@@ -224,7 +224,8 @@ def run_program_for_single_img(
     result = []
 
     if platform.system() == 'Windows':
-        result = get_result_on_windows()
+        result = get_result_on_windows(
+            image, place, resize=resize, size=size, browser=br)
     else:
         with NamedTemporaryFile() as temp, NamedTemporaryFile() as thumb_temp:
             shutil.copyfile(image, temp.name)
