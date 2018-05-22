@@ -287,12 +287,14 @@ def run_program_for_single_img(
 
 
 @click.group()
+@click.version_option()
 def cli():
     """Run cli."""
     pass
 
 
 @cli.command()
+@click.version_option()
 @click.option(
     '--place', type=click.Choice([x for x in iqdb_url_dict]),
     default=DEFAULT_PLACE,
