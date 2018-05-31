@@ -5,6 +5,7 @@ from tempfile import NamedTemporaryFile
 from urllib.parse import urlparse
 import logging
 import os
+import platform
 import shutil
 
 import cfscrape
@@ -164,6 +165,51 @@ def write_url_from_match_result(match_result, folder=None):
         f.write('\n')
 
 
+def get_result_on_windows(image, place, resize=None, size=None, browser=None):
+    """Get result on Windows."""
+    result = []
+    # temp_f
+    temp_f = NamedTemporaryFile(mode='w+t', delete=False)
+    temp_file_name = temp_f.name
+    # thumb_temp_f
+    thumb_temp_f = NamedTemporaryFile(mode='w+t', delete=False)
+    thumb_temp_file_name = thumb_temp_f.name
+    # copy to temp file
+    shutil.copyfile(image, temp_f.name)
+    # get image to be posted based on user input
+    try:
+        post_img = get_posted_image(
+            img_path=temp_f.name, resize=resize, size=size,
+            thumb_path=thumb_temp_f.name)
+    except OSError as e:
+        raise OSError(str(e) + ' when processing {}'.format(image))
+    # append data to result
+    for img_m_rel_set in post_img.imagematchrelationship_set:
+        for item_set in img_m_rel_set.imagematch_set:
+            if item_set.search_place_verbose == place:
+                result.append(item_set)
+
+    if not result:
+        url, im_place = iqdb_url_dict[place]
+        use_requests = True if place != 'e621' else False
+        post_img_path = temp_f.name if not resize else thumb_temp_f.name
+        page = get_page_result(
+            image=post_img_path, url=url, browser=browser,
+            use_requests=use_requests
+        )
+        # if ok, will output: <Response [200]>
+        result = list(models.ImageMatch.get_or_create_from_page(
+            page=page, image=post_img, place=im_place))
+        result = [x[0] for x in result]
+    # temp_f
+    temp_f.close()
+    os.remove(temp_file_name)
+    # thumb_temp_f
+    thumb_temp_f.close()
+    os.remove(thumb_temp_file_name)
+    return result
+
+
 def run_program_for_single_img(
         image, resize, size, place, match_filter, browser,
         scraper, disable_tag_print=False, write_tags=False, write_url=False
@@ -177,28 +223,35 @@ def run_program_for_single_img(
     folder = os.path.dirname(image)
     result = []
 
-    with NamedTemporaryFile() as temp, NamedTemporaryFile() as thumb_temp:
-        shutil.copyfile(image, temp.name)
-        post_img = get_posted_image(
-            img_path=temp.name, resize=resize, size=size, thumb_path=thumb_temp.name)
+    if platform.system() == 'Windows':
+        result = get_result_on_windows(
+            image, place, resize=resize, size=size, browser=br)
+    else:
+        with NamedTemporaryFile() as temp, NamedTemporaryFile() as thumb_temp:
+            shutil.copyfile(image, temp.name)
+            try:
+                post_img = get_posted_image(
+                    img_path=temp.name, resize=resize, size=size, thumb_path=thumb_temp.name)
+            except OSError as e:
+                raise OSError(str(e) + ' when processing {}'.format(image))
 
-        for img_m_rel_set in post_img.imagematchrelationship_set:
-            for item_set in img_m_rel_set.imagematch_set:
-                if item_set.search_place_verbose == place:
-                    result.append(item_set)
+            for img_m_rel_set in post_img.imagematchrelationship_set:
+                for item_set in img_m_rel_set.imagematch_set:
+                    if item_set.search_place_verbose == place:
+                        result.append(item_set)
 
-        if not result:
-            url, im_place = iqdb_url_dict[place]
-            use_requests = True if place != 'e621' else False
-            post_img_path = temp.name if not resize else thumb_temp.name
-            page = get_page_result(
-                image=post_img_path, url=url, browser=br,
-                use_requests=use_requests
-            )
-            # if ok, will output: <Response [200]>
-            result = list(models.ImageMatch.get_or_create_from_page(
-                page=page, image=post_img, place=im_place))
-            result = [x[0] for x in result]
+            if not result:
+                url, im_place = iqdb_url_dict[place]
+                use_requests = True if place != 'e621' else False
+                post_img_path = temp.name if not resize else thumb_temp.name
+                page = get_page_result(
+                    image=post_img_path, url=url, browser=br,
+                    use_requests=use_requests
+                )
+                # if ok, will output: <Response [200]>
+                result = list(models.ImageMatch.get_or_create_from_page(
+                    page=page, image=post_img, place=im_place))
+                result = [x[0] for x in result]
 
     if match_filter == 'best-match':
         result = [x for x in result if x.status == x.STATUS_BEST_MATCH]
@@ -234,12 +287,14 @@ def run_program_for_single_img(
 
 
 @click.group()
+@click.version_option()
 def cli():
     """Run cli."""
     pass
 
 
 @cli.command()
+@click.version_option()
 @click.option(
     '--place', type=click.Choice([x for x in iqdb_url_dict]),
     default=DEFAULT_PLACE,

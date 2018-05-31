@@ -1,3 +1,12 @@
+0.2.1 (2018-05-31)
+``````````````````
+- fix windows bug on temp file
+
+0.2.0 (2018-03-31)
+``````````````````
+- add template for manifest.in
+- not creating thumbnail anymore
+
 0.1.0 (2018-02-26)
 ``````````````````
 
