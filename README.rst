@@ -34,10 +34,16 @@ To parse folder of images (e.g. in this example :code:`image_folder:`) and write
 
 Use as Hydrus iqdb script server
 ````````````````````````````````
-1. Run :code:`iqdb-tagger-server init` when you run the server for first time.
-2. Run :code:`iqdb-tagger-server start` and note the server address.
-3. Import one of the parsing scripts below to Hydrus parsing scripts.
-4. Check the server address and edit it as needed.
+1. Run :code:`iqdb-tagger-server run` and note the server address.
+
+  To run it on `127.0.0.1` on port `5006`, run the following command:
+
+.. code:: bash
+
+    `iqdb-tagger-server run -h 127.0.0.1 -p 5006`
+  
+2. Import one of the parsing scripts below to Hydrus parsing scripts.
+3. Check the server address and edit it as needed.
 
 IQDB parsing script
 
@@ -46,6 +52,37 @@ IQDB parsing script
     [32, "local iqdb", 2, ["http://127.0.0.1:5006", 1, 0, [55, 1, [[], "some hash bytes"]], "file", {"place": "0", "resize": "on"}, [[29, 1, ["link", [27, 5, [[["a", {"data-status": "best-match", "class": "img-match-detail"}, null]], 0, "href", [51, 1, [3, "", null, null, "example string"]], [55, 1, [[], "parsed information"]]]], [[30, 2, ["", 0, [27, 5, [[["li", {"class": "tag-creator"}, null]], 1, "", [51, 1, [3, "", null, null, "example string"]], [55, 1, [[], "parsed information"]]]], "creator"]], [30, 2, ["", 0, [27, 5, [[["li", {"class": "tag-series"}, null]], 1, "", [51, 1, [3, "", null, null, "example string"]], [55, 1, [[], "parsed information"]]]], "series"]], [30, 2, ["", 0, [27, 5, [[["li", {"class": "tag-character"}, null]], 1, "", [51, 1, [3, "", null, null, "example string"]], [55, 1, [[], "parsed information"]]]], "character"]], [30, 2, ["", 0, [27, 5, [[["li", {"class": "tag-general"}, null]], 1, "", [51, 1, [3, "", null, null, "example string"]], [55, 1, [[], "parsed information"]]]], ""]]]]]]]]
 
 Every uploaded and match history can be seen on Front page (in this case http://127.0.0.1:5006).
+
+Setting Hydrus iqdb script server on NAS
+````````````````````````````````````````
+
+Here is example for Synology DS1817+ with DSM6.1.7 running on an Intel Atom C2538
+
+0. Make sure SSH is turned on in your control panel
+1. Install python 3 community package: https://synocommunity.com/package/python3
+2. Install pip3
+
+.. code:: bash
+
+  install pip3 with:
+  sudo -i
+  wget https://bootstrap.pypa.io/get-pip.py
+  python3 get-pip.py
+
+3. Install iqdb-tagger
+
+.. code:: bash
+
+  cd /volume1/@appstore/py3k/usr/local/bin
+  ./pip install iqdb_tagger
+
+3.1 Add `bin` folder to path (optional)
+
+.. code:: bash
+
+  export PATH=$PATH:/volume1/@appstore/py3k/usr/local/bin 
+
+That command line above can also be put on `~/.bashrc`, so NAS will run it everytime user login.
 
 Installation
 ------------
@@ -75,27 +112,7 @@ To install under python3 follow the instruction on this link https://stackoverfl
 CHANGELOG
 ---------
 
-0.2.0 (2018-03-31)
-``````````````````
-
-- new argument :code:`write-tags` to write parsed tag to text file
-- both cli and server now don't create thumbnail anymore
-- main cli command is moved to :code:`run` command
-
-0.1.0 (2018-02-26)
-``````````````````
-
-- new input mode. Now the program can parse folder to find file
-- new single match page
-- new argument :code:`abort-on-error` to stop the program when error occured
-- new argument :code:`write-tags` to write parsed tag to text file
-- change the post method. now it is default to use :code:`requests.post`
-- change the way server start. run init subcommand first before start the server
-- remove :code:`html-dump` argument.
-- fix pillow error. Install pillow if error stil raised.
-- fix png upload error.
-- fix OSError when thumbnail is an empty file.
-
+.. include:: changelog.rst
 
 FAQ
 ---

@@ -21,6 +21,6 @@
 - fix png upload error.
 - fix OSError when thumbnail is an empty file.
 
-0.0.1
-`````
-- Program created
+0.0.1 (2012-04-09)
+``````````````````
+- First commit
