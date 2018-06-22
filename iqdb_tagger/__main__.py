@@ -30,10 +30,25 @@ iqdb_url_dict = {
     'iqdb': (
         'http://iqdb.org', models.ImageMatch.SP_IQDB),
     'danbooru': (
-        'http://danbooru.iqdb.org', models.ImageMatch.SP_DANBOORU
-    ),
+        'http://danbooru.iqdb.org', models.ImageMatch.SP_DANBOORU),
     'e621': (
         'http://iqdb.harry.lu', models.ImageMatch.SP_E621),
+    'anime_pictures': (
+        'https://anime-pictures.iqdb.org', models.ImageMatch.SP_ANIME_PICTURES),
+    'e_shuushuu': (
+        'https://e-shuushuu.iqdb.org', models.ImageMatch.SP_E_SHUUSHUU),
+    'gelbooru': (
+        'https://gelbooru.iqdb.org', models.ImageMatch.SP_GELBOORU),
+    'konachan': (
+        'https://konachan.iqdb.org', models.ImageMatch.SP_KONACHAN),
+    'sankaku': (
+        'https://sankaku.iqdb.org', models.ImageMatch.SP_SANKAKU),
+    'theanimegallery': (
+        'https://theanimegallery.iqdb.org', models.ImageMatch.SP_THEANIMEGALLERY),
+    'yandere': (
+        'https://yandere.iqdb.org', models.ImageMatch.SP_YANDERE),
+    'zerochan': (
+        'https://zerochan.iqdb.org', models.ImageMatch.SP_ZEROCHAN),
 }
 
 
