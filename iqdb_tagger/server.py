@@ -104,7 +104,7 @@ class CustomFlaskGroup(FlaskGroup):
         self.params[0].callback = get_custom_version
 
 
-def get_custom_version(ctx, param, value):
+def get_custom_version(ctx, _, value):
     """Get version."""
     if not value or ctx.resilient_parsing:
         return

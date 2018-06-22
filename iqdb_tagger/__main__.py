@@ -225,7 +225,7 @@ def get_result_on_windows(image, place, resize=None, size=None, browser=None):
     return result
 
 
-def run_program_for_single_img(
+def run_program_for_single_img(  # pylint: disable=too-many-branches,
         image, resize, size, place, match_filter, browser,
         scraper, disable_tag_print=False, write_tags=False, write_url=False,
         minimum_similarity=None

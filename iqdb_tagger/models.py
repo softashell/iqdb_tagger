@@ -209,7 +209,7 @@ class ImageMatch(BaseModel):
         (SP_SANKAKU, 'sankaku'),
         (SP_THEANIMEGALLERY, 'theanimegallery'),
         (SP_YANDERE, 'yandere'),
-        (SP_ZEROCHAN , 'zerochan'),
+        (SP_ZEROCHAN, 'zerochan'),
     )
     match = ForeignKeyField(ImageMatchRelationship)
     similarity = IntegerField()
