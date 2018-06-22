@@ -212,7 +212,8 @@ def get_result_on_windows(image, place, resize=None, size=None, browser=None):
 
 def run_program_for_single_img(
         image, resize, size, place, match_filter, browser,
-        scraper, disable_tag_print=False, write_tags=False, write_url=False
+        scraper, disable_tag_print=False, write_tags=False, write_url=False,
+        minimum_similarity=None
 ):
     """Run program for single image."""
     # compatibility
@@ -255,6 +256,8 @@ def run_program_for_single_img(
 
     if match_filter == 'best-match':
         result = [x for x in result if x.status == x.STATUS_BEST_MATCH]
+    if minimum_similarity:
+        result = [x for x in result if x.similarity >= minimum_similarity]
 
     log.debug('Number of valid result', n=len(result))
     for item in result:
@@ -262,8 +265,10 @@ def run_program_for_single_img(
         # type match_result: models.Match object
         match_result = item.match.match_result
         url = match_result.link
-        print('{}|{}|{}'.format(
-            item.similarity, item.status_verbose, url))
+        log.debug(
+            'match status',
+            similarity=item.similarity, status=item.status_verbose)
+        log.debug('url', v=url)
 
         try:
             tags = get_tags_from_match_result(match_result, browser, scraper)
@@ -300,6 +305,8 @@ def cli():
     default=DEFAULT_PLACE,
     help='Specify iqdb place, default:{}'.format(DEFAULT_PLACE)
 )
+@click.option(
+    '--minimum-similarity', type=float, help='Minimum similarity.')
 @click.option('--resize', is_flag=True, help='Use resized image.')
 @click.option('--size', is_flag=True, help='Specify resized image.')
 @click.option('--db-path', help='Specify Database path.')
@@ -322,8 +329,8 @@ def run(
     prog_input=None, resize=False, size=None,
     db_path=None, place=DEFAULT_PLACE, match_filter='default',
     input_mode='default', verbose=False, debug=False,
-    abort_on_error=False, write_tags=False, write_url=False
-
+    abort_on_error=False, write_tags=False, write_url=False,
+    minimum_similarity=None,
 ):
     """Get similar image from iqdb."""
     assert prog_input is not None, "Input is not a valid path"
@@ -360,7 +367,8 @@ def run(
                 result = run_program_for_single_img(
                     ff, resize, size, place, match_filter,
                     browser=br, scraper=scraper, disable_tag_print=True,
-                    write_tags=write_tags, write_url=write_url
+                    write_tags=write_tags, write_url=write_url,
+                    minimum_similarity=minimum_similarity
                 )
             except Exception as e:  # pylint:disable=broad-except
                 if abort_on_error:
@@ -373,7 +381,8 @@ def run(
         result = run_program_for_single_img(
             image, resize, size, place, match_filter,
             browser=br, scraper=scraper,
-            write_tags=write_tags, write_url=write_url
+            write_tags=write_tags, write_url=write_url,
+            minimum_similarity=minimum_similarity
         )
         if result is not None and result.get('error'):
             error_set.extend([(image, x) for x in result['error']])
