@@ -1,3 +1,8 @@
+0.2.2 (2018-07-01)
+``````````````````
+- minimum similarity
+- more iqdb place
+
 0.2.1 (2018-05-31)
 ``````````````````
 - fix windows bug on temp file
