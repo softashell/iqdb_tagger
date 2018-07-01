@@ -190,10 +190,26 @@ class ImageMatch(BaseModel):
     SP_IQDB = 0
     SP_DANBOORU = 1
     SP_E621 = 2
+    SP_ANIME_PICTURES = 3
+    SP_E_SHUUSHUU = 4
+    SP_GELBOORU = 5
+    SP_KONACHAN = 6
+    SP_SANKAKU = 7
+    SP_THEANIMEGALLERY = 8
+    SP_YANDERE = 9
+    SP_ZEROCHAN = 10
     SP_CHOICES = (
         (SP_IQDB, 'iqdb'),
         (SP_DANBOORU, 'danbooru'),
         (SP_E621, 'e621'),
+        (SP_ANIME_PICTURES, 'anime_pictures'),
+        (SP_E_SHUUSHUU, 'e_shuushuu'),
+        (SP_GELBOORU, 'gelbooru'),
+        (SP_KONACHAN, 'konachan'),
+        (SP_SANKAKU, 'sankaku'),
+        (SP_THEANIMEGALLERY, 'theanimegallery'),
+        (SP_YANDERE, 'yandere'),
+        (SP_ZEROCHAN, 'zerochan'),
     )
     match = ForeignKeyField(ImageMatchRelationship)
     similarity = IntegerField()

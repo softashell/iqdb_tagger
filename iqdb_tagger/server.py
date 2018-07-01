@@ -5,8 +5,10 @@ from logging.handlers import TimedRotatingFileHandler
 import logging
 import os
 import pprint
+import sys
 
 from flask import (
+    __version__ as flask_version,
     Flask,
     send_from_directory,
 )
@@ -21,6 +23,8 @@ from iqdb_tagger.models import init_db
 from iqdb_tagger.utils import default_db_path, thumb_folder, user_data_dir
 from iqdb_tagger import views
 
+
+__version__ = '0.2.1'
 log = structlog.getLogger()
 
 
@@ -90,7 +94,31 @@ def create_app(script_info=None):
     return app
 
 
-@click.group(cls=FlaskGroup, create_app=create_app)
+class CustomFlaskGroup(FlaskGroup):
+    """Custom Flask Group."""
+
+    def __init__(self, **kwargs):
+        """Class init."""
+        super().__init__(**kwargs)
+        self.params[0].help = 'Show the program version'
+        self.params[0].callback = get_custom_version
+
+
+def get_custom_version(ctx, _, value):
+    """Get version."""
+    if not value or ctx.resilient_parsing:
+        return
+    message = '%(app_name)s %(app_version)s\nFlask %(version)s\nPython %(python_version)s'
+    click.echo(message % {
+        'app_name': 'Iqdb-tagger',
+        'app_version': __version__,
+        'version': flask_version,
+        'python_version': sys.version,
+    }, color=ctx.color)
+    ctx.exit()
+
+
+@click.group(cls=CustomFlaskGroup, create_app=create_app)
 def cli():
     """Run cli. This is a management script for application."""
     pass
