@@ -19,7 +19,7 @@ install_requires = [
     'Flask-Admin==1.5.1',
     'flask-paginate==0.5.1',
     'Flask-WTF==0.14.2',
-    'Flask==0.12.2',
+    'Flask>=1.0.2',
     'Flask>=0.12.2',
     'funclog>=0.3.0',
     'lxml>=3.8.0',
