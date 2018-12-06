@@ -5,6 +5,7 @@ from tempfile import NamedTemporaryFile
 from urllib.parse import urlparse
 import logging
 import os
+import pathlib
 import platform
 import shutil
 
@@ -27,64 +28,45 @@ services = ['1', '2', '3', '4', '5', '6', '10', '11']
 forcegray = False
 log = structlog.getLogger()
 iqdb_url_dict = {
-    'iqdb': (
-        'http://iqdb.org', models.ImageMatch.SP_IQDB),
-    'danbooru': (
-        'http://danbooru.iqdb.org', models.ImageMatch.SP_DANBOORU),
-    'e621': (
-        'http://iqdb.harry.lu', models.ImageMatch.SP_E621),
-    'anime_pictures': (
-        'https://anime-pictures.iqdb.org', models.ImageMatch.SP_ANIME_PICTURES),
-    'e_shuushuu': (
-        'https://e-shuushuu.iqdb.org', models.ImageMatch.SP_E_SHUUSHUU),
-    'gelbooru': (
-        'https://gelbooru.iqdb.org', models.ImageMatch.SP_GELBOORU),
-    'konachan': (
-        'https://konachan.iqdb.org', models.ImageMatch.SP_KONACHAN),
-    'sankaku': (
-        'https://sankaku.iqdb.org', models.ImageMatch.SP_SANKAKU),
-    'theanimegallery': (
-        'https://theanimegallery.iqdb.org', models.ImageMatch.SP_THEANIMEGALLERY),
-    'yandere': (
-        'https://yandere.iqdb.org', models.ImageMatch.SP_YANDERE),
-    'zerochan': (
-        'https://zerochan.iqdb.org', models.ImageMatch.SP_ZEROCHAN),
+    'iqdb': ('http://iqdb.org', models.ImageMatch.SP_IQDB),
+    'danbooru': ('http://danbooru.iqdb.org', models.ImageMatch.SP_DANBOORU),
+    'e621': ('http://iqdb.harry.lu', models.ImageMatch.SP_E621),
+    'anime_pictures': ('https://anime-pictures.iqdb.org', models.ImageMatch.SP_ANIME_PICTURES),
+    'e_shuushuu': ('https://e-shuushuu.iqdb.org', models.ImageMatch.SP_E_SHUUSHUU),
+    'gelbooru': ('https://gelbooru.iqdb.org', models.ImageMatch.SP_GELBOORU),
+    'konachan': ('https://konachan.iqdb.org', models.ImageMatch.SP_KONACHAN),
+    'sankaku': ('https://sankaku.iqdb.org', models.ImageMatch.SP_SANKAKU),
+    'theanimegallery': ('https://theanimegallery.iqdb.org', models.ImageMatch.SP_THEANIMEGALLERY),
+    'yandere': ('https://yandere.iqdb.org', models.ImageMatch.SP_YANDERE),
+    'zerochan': ('https://zerochan.iqdb.org', models.ImageMatch.SP_ZEROCHAN),
 }
 
 
 def get_page_result(image, url, browser=None, use_requests=False):
-    """Get page result.
+    """Get iqdb page result.
 
     Args:
         image: Image path to be uploaded.
+        url: iqdb url
     Returns:
         HTML page from the result.
     """
-    # compatibility
-    br = browser
-
-    if br is None:
-        br = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
-        br.raise_on_404 = True
-
     if use_requests:
         files = {'file': open(image, 'rb')}
         resp = requests.post(url, files=files, timeout=10)
         return resp.text
-    br.open(url)
-    html_form = br.select_form('form')
+    browser = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
+    browser.raise_on_404 = True
+    browser.open(url)
+    html_form = browser.select_form('form')
     html_form.input({'file': image})
-    br.submit_selected()
+    browser.submit_selected()
     # if ok, will output: <Response [200]>
-    return br.get_current_page()
+    return browser.get_current_page()
 
 
-def get_posted_image(
-        img_path, resize=False, size=None, output_thumb_folder=None, thumb_path=None):
+def get_posted_image(img_path, resize=False, size=None, output_thumb_folder=thumb_folder, thumb_path=None):
     """Get posted image."""
-    if output_thumb_folder is None:
-        output_thumb_folder = thumb_folder
-
     img, _ = models.ImageModel.get_or_create_from_path(img_path)
     def_thumb_rel, _ = models.ThumbnailRelationship.get_or_create_from_image(
         image=img,
@@ -114,40 +96,29 @@ def get_posted_image(
         if resized_thumb_rel is not None else img
 
 
-def init_program(db_path=None):
+def init_program(db_path=default_db_path):
     """Init program."""
     # create user data dir
-    if not os.path.isdir(user_data_dir):
-        os.makedirs(user_data_dir, exist_ok=True)
-        log.debug('User data dir created.')
-    # create thumbnail folder
-    if not os.path.isdir(thumb_folder):
-        os.makedirs(thumb_folder, exist_ok=True)
-        log.debug('Thumbnail folder created.')
-
-    # database
-    if db_path is None:
-        db_path = default_db_path
+    pathlib.Path(user_data_dir).mkdir(parents=True, exist_ok=True)
+    pathlib.Path(thumb_folder).mkdir(parents=True, exist_ok=True)
     models.init_db(db_path, db_version)
 
 
 def get_tags_from_match_result(match_result, browser=None, scraper=None):
     """Get tags from match result."""
-    if browser is None:
-        browser = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
-        browser.raise_on_404 = True
-
-    res = models.MatchTagRelationship.select().where(
-        models.MatchTagRelationship.match == match_result)
-    tags = [x.tag for x in res]
-
     filtered_hosts = ['anime-pictures.net', 'www.theanimegallery.com']
+    res = models.MatchTagRelationship.select() \
+        .where(models.MatchTagRelationship.match == match_result)
+    tags = [x.tag for x in res]
     is_url_in_filtered_hosts = urlparse(match_result.link).netloc in \
         filtered_hosts
     if is_url_in_filtered_hosts:
         log.debug('URL in filtered hosts, no tag fetched', url=match_result.link)
     elif not tags:
         try:
+            if browser is None:
+                browser = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
+                browser.raise_on_404 = True
             browser.open(match_result.link, timeout=10)
             page = browser.get_current_page()
             new_tags = get_tags_from_parser(page, match_result.link, scraper)
@@ -155,10 +126,8 @@ def get_tags_from_match_result(match_result, browser=None, scraper=None):
             if new_tags:
                 for tag in new_tags:
                     namespace, tag_name = tag
-                    tag_model, _ = models.Tag.get_or_create(
-                        name=tag_name, namespace=namespace)
-                    models.MatchTagRelationship.get_or_create(
-                        match=match_result, tag=tag_model)
+                    tag_model, _ = models.Tag.get_or_create(name=tag_name, namespace=namespace)
+                    models.MatchTagRelationship.get_or_create(match=match_result, tag=tag_model)
                     new_tag_models.append(tag_model)
             else:
                 log.debug('No tags found.')
@@ -194,8 +163,7 @@ def get_result_on_windows(image, place, resize=None, size=None, browser=None):
     # get image to be posted based on user input
     try:
         post_img = get_posted_image(
-            img_path=temp_f.name, resize=resize, size=size,
-            thumb_path=thumb_temp_f.name)
+            img_path=temp_f.name, resize=resize, size=size, thumb_path=thumb_temp_f.name)
     except OSError as e:
         raise OSError(str(e) + ' when processing {}'.format(image))
     # append data to result
@@ -209,12 +177,10 @@ def get_result_on_windows(image, place, resize=None, size=None, browser=None):
         use_requests = place != 'e621'
         post_img_path = temp_f.name if not resize else thumb_temp_f.name
         page = get_page_result(
-            image=post_img_path, url=url, browser=browser,
-            use_requests=use_requests
-        )
+            image=post_img_path, url=url, browser=browser, use_requests=use_requests)
         # if ok, will output: <Response [200]>
-        result = list(models.ImageMatch.get_or_create_from_page(
-            page=page, image=post_img, place=im_place))
+        result = list(
+            models.ImageMatch.get_or_create_from_page(page=page, image=post_img, place=im_place))
         result = [x[0] for x in result]
     # temp_f
     temp_f.close()
@@ -243,7 +209,7 @@ def run_program_for_single_img(  # pylint: disable=too-many-branches,
         result = get_result_on_windows(
             image, place, resize=resize, size=size, browser=br)
     else:
-        with NamedTemporaryFile() as temp, NamedTemporaryFile() as thumb_temp:
+        with NamedTemporaryFile(delete=False) as temp, NamedTemporaryFile(delete=False) as thumb_temp:
             shutil.copyfile(image, temp.name)
             try:
                 post_img = get_posted_image(
