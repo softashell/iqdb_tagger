@@ -219,15 +219,16 @@ class ImageMatch(BaseModel):
     force_gray = BooleanField(default=False)
 
     @staticmethod
-    def _get_status_from_header_tag(header_tag):
-        """Get status from header tag."""
+    def parse_table(table):
+        """Parse table."""
+        header_tag = table.select_one('th')
+        status = ImageMatch.STATUS_OTHER
         if hasattr(header_tag, 'text'):
             header_text = header_tag.text
+            best_match_text = ('Best match', 'Additional match', 'Probable match:')
             if header_text in ('Your image', 'No relevant matches'):
-                return None
-            best_match_text = \
-                ('Best match', 'Additional match', 'Probable match:')
-            if header_text == 'Possible match':
+                status = None
+            elif header_text == 'Possible match':
                 status = ImageMatch.STATUS_POSSIBLE_MATCH
             elif header_text in best_match_text:
                 status = ImageMatch.STATUS_BEST_MATCH
@@ -235,18 +236,8 @@ class ImageMatch(BaseModel):
                 status = ImageMatch.STATUS_OTHER
             else:
                 log.debug('header text', v=header_text)
-                status = ImageMatch.STATUS_OTHER
-        else:
-            status = ImageMatch.STATUS_OTHER
-        return status
-
-    @staticmethod
-    def parse_table(table):
-        """Parse table."""
-        header_tag = table.select_one('th')
-        status = ImageMatch._get_status_from_header_tag(header_tag)
         if status is None:
-            return None
+            return {}
         td_tags = table.select('td')
         assert '% similarity' in td_tags[-1].text, "similarity was not found in " + header_tag.text
         size_and_rating_text = td_tags[-2].text
@@ -295,7 +286,7 @@ class ImageMatch(BaseModel):
             with open(page) as f:
                 soup = BeautifulSoup(f.read(), 'lxml')
             page = soup
-
+        # parse table
         tables = page.select('.pages table')
         for table in tables:
             res = ImageMatch.parse_table(table)
