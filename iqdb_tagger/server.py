@@ -121,7 +121,6 @@ def get_custom_version(ctx, _, value):
 @click.group(cls=CustomFlaskGroup, create_app=create_app)
 def cli():
     """Run cli. This is a management script for application."""
-    pass
 
 
 if __name__ == '__main__':

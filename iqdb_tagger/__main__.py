@@ -206,7 +206,7 @@ def get_result_on_windows(image, place, resize=None, size=None, browser=None):
 
     if not result:
         url, im_place = iqdb_url_dict[place]
-        use_requests = True if place != 'e621' else False
+        use_requests = place != 'e621'
         post_img_path = temp_f.name if not resize else thumb_temp_f.name
         page = get_page_result(
             image=post_img_path, url=url, browser=browser,
@@ -258,7 +258,7 @@ def run_program_for_single_img(  # pylint: disable=too-many-branches,
 
             if not result:
                 url, im_place = iqdb_url_dict[place]
-                use_requests = True if place != 'e621' else False
+                use_requests = place != 'e621'
                 post_img_path = temp.name if not resize else thumb_temp.name
                 page = get_page_result(
                     image=post_img_path, url=url, browser=br,
@@ -310,7 +310,6 @@ def run_program_for_single_img(  # pylint: disable=too-many-branches,
 @click.version_option()
 def cli():
     """Run cli."""
-    pass
 
 
 @cli.command()
