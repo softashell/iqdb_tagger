@@ -1,31 +1,69 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """server module."""
-from logging.handlers import TimedRotatingFileHandler
 import logging
+from logging.handlers import TimedRotatingFileHandler
 import os
 import pprint
 import sys
+from tempfile import NamedTemporaryFile
 
 from flask import (
     __version__ as flask_version,
+    abort,
+    current_app,
     Flask,
+    request,
     send_from_directory,
 )
 from flask.cli import FlaskGroup
 from flask_admin import Admin
-# from flask_admin.contrib.peewee import ModelView
+from flask_restful import Resource, Api
 import click
 import structlog
+import requests
 
-from iqdb_tagger.__main__ import init_program
+from iqdb_tagger.__main__ import (
+    get_page_result,
+    get_posted_image,
+    init_program,
+    iqdb_url_dict,
+)
 from iqdb_tagger.models import init_db
 from iqdb_tagger.utils import default_db_path, thumb_folder, user_data_dir
-from iqdb_tagger import views
+from iqdb_tagger import views, models
 
 
 __version__ = '0.2.1'
 log = structlog.getLogger()
+
+
+class MatchViewList(Resource):
+    """Resource api for MatchViewList."""
+
+    def post(self):  # pylint: disable=R0201
+        """Post method for MatchViewList."""
+        f = request.files['file']
+        resize = True
+        place = 'iqdb'
+        with NamedTemporaryFile(delete=False) as temp, NamedTemporaryFile(delete=False) as thumb_temp:
+            f.save(temp.name)
+            posted_img = get_posted_image(
+                img_path=temp.name, resize=resize, thumb_path=thumb_temp.name)
+            url, im_place = iqdb_url_dict[place]
+            query = posted_img.imagematchrelationship_set \
+                .select().join(models.ImageMatch) \
+                .where(models.ImageMatch.search_place == im_place)
+            if not query.exists():
+                try:
+                    posted_img_path = temp.name if not resize else thumb_temp.name
+                    result_page = get_page_result(image=posted_img_path, url=url)
+                except requests.exceptions.ConnectionError as e:
+                    current_app.logger.error(str(e))
+                    abort(400, 'Connection error.')
+                image_match = list(models.ImageMatch.get_or_create_from_page(  # NOQA
+                    page=result_page, image=posted_img, place=im_place))
+        raise NotImplementedError
 
 
 def thumb(basename):
@@ -79,11 +117,13 @@ def create_app(script_info=None):
     def shell_context():  # pylint: disable=unused-variable
         return {'app': app}
 
+    # api
+    api = Api(app)
+    api.add_resource(MatchViewList, '/api/matchview')
     # flask-admin
     app_admin = Admin(
         app, name='IQDB Tagger', template_mode='bootstrap3',
         index_view=views.HomeView(name='Home', template='iqdb_tagger/index.html', url='/'))
-
     app_admin.add_view(views.MatchView())
     # app_admin.add_view(ModelView(ImageMatch, category='DB'))
     # app_admin.add_view(ModelView(ImageMatchRelationship, category='DB'))
