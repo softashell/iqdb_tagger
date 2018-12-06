@@ -3,6 +3,7 @@
 """main module."""
 from tempfile import NamedTemporaryFile
 from urllib.parse import urlparse
+from bs4 import BeautifulSoup
 import logging
 import os
 import pathlib
@@ -40,6 +41,42 @@ iqdb_url_dict = {
     'yandere': ('https://yandere.iqdb.org', models.ImageMatch.SP_YANDERE),
     'zerochan': ('https://zerochan.iqdb.org', models.ImageMatch.SP_ZEROCHAN),
 }
+
+
+def get_iqdb_result(image, iqdb_url):
+    """Get iqdb result."""
+    e621_iqdb_url = 'http://iqdb.harry.lu'
+    use_requests = iqdb_url != e621_iqdb_url
+    if use_requests:
+        files = {'file': open(image, 'rb')}
+        resp = requests.post(iqdb_url, files=files, timeout=10)
+        html_text = BeautifulSoup(resp.text, 'lxml')
+    else:
+        browser = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
+        browser.raise_on_404 = True
+        browser.open(iqdb_url)
+        html_form = browser.select_form('form')
+        html_form.input({'file': image})
+        browser.submit_selected()
+        html_text = browser.get_current_page()
+    return parse_iqdb_result_page(html_text)
+
+
+def parse_iqdb_result_page(page):
+    """Parse iqdb result page."""
+    tables = page.select('.pages table')
+    for table in tables:
+        res = models.ImageMatch.parse_table(table)
+        if not res:
+            continue
+        a_tags = table.select('a')
+        assert len(a_tags) < 3, "Unexpected html received at parse_page. Malformed link"
+        if len(a_tags) == 2:
+            additional_res = res
+            additional_res['href'] = \
+                a_tags[1].attrs.get('href', None)
+            yield additional_res
+        yield res
 
 
 def get_page_result(image, url, browser=None, use_requests=False):
