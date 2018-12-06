@@ -3,10 +3,9 @@ python:
   - "3.5"
   - "3.6"
 before_install:
-  - "pip install -r requirements-dev.txt"
+  - "pip install -e .[dev]"
 install:
   - "pip install -e ."
-  - "pip install -r requirements.txt"
 addons:
 script:
   - find . -iname "*.py" -and -not -path './.tox/*' -and -not -path './docs/*' | xargs pylint --rcfile=.pylintrc
