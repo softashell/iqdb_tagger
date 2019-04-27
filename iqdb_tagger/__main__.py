@@ -2,24 +2,25 @@
 # -*- coding: utf-8 -*-
 """main module."""
 from tempfile import NamedTemporaryFile
+from typing import Tuple, List, Dict, Any, Union, Optional  # NOQA; pylint: disable=unused-import
 from urllib.parse import urlparse
-from bs4 import BeautifulSoup
 import logging
 import os
 import pathlib
 import platform
 import shutil
 
+from bs4 import BeautifulSoup
 import cfscrape
 import click
 import mechanicalsoup
 import requests
 import structlog
 
-from iqdb_tagger import models
-from iqdb_tagger.__init__ import db_version
-from iqdb_tagger.custom_parser import get_tags as get_tags_from_parser
-from iqdb_tagger.utils import default_db_path, thumb_folder, user_data_dir
+from . import models
+from .__init__ import db_version
+from .custom_parser import get_tags as get_tags_from_parser
+from .utils import default_db_path, thumb_folder, user_data_dir
 
 db = '~/images/! tagged'
 DEFAULT_SIZE = 150, 150
@@ -102,9 +103,13 @@ def get_page_result(image, url, browser=None, use_requests=False):
     return browser.get_current_page()
 
 
-def get_posted_image(img_path, resize=False, size=None, output_thumb_folder=thumb_folder, thumb_path=None):
+def get_posted_image(
+        img_path: str,
+        resize: Optional[bool] = False, size: Optional[Tuple[int, int]] = None,
+        output_thumb_folder: Optional[str] = thumb_folder,
+        thumb_path: Optional[str] = None) -> models.ImageModel:
     """Get posted image."""
-    img, _ = models.ImageModel.get_or_create_from_path(img_path)
+    img = models.ImageModel.get_or_create_from_path(img_path)[0]  # type: models.ImageModel
     def_thumb_rel, _ = models.ThumbnailRelationship.get_or_create_from_image(
         image=img,
         thumb_folder=output_thumb_folder,
@@ -133,7 +138,7 @@ def get_posted_image(img_path, resize=False, size=None, output_thumb_folder=thum
         if resized_thumb_rel is not None else img
 
 
-def init_program(db_path=default_db_path):
+def init_program(db_path: Optional[str] = default_db_path):
     """Init program."""
     # create user data dir
     pathlib.Path(user_data_dir).mkdir(parents=True, exist_ok=True)
@@ -141,7 +146,11 @@ def init_program(db_path=default_db_path):
     models.init_db(db_path, db_version)
 
 
-def get_tags_from_match_result(match_result, browser=None, scraper=None):
+def get_tags_from_match_result(
+        match_result: models.Match,
+        browser: Optional[mechanicalsoup.StatefulBrowser] = None,
+        scraper: Optional[cfscrape.CloudflareScraper] = None
+) -> List[models.Tag]:
     """Get tags from match result."""
     filtered_hosts = ['anime-pictures.net', 'www.theanimegallery.com']
     res = models.MatchTagRelationship.select() \
@@ -163,7 +172,7 @@ def get_tags_from_match_result(match_result, browser=None, scraper=None):
             if new_tags:
                 for tag in new_tags:
                     namespace, tag_name = tag
-                    tag_model, _ = models.Tag.get_or_create(name=tag_name, namespace=namespace)
+                    tag_model = models.Tag.get_or_create(name=tag_name, namespace=namespace)[0]  # type: models.Tag
                     models.MatchTagRelationship.get_or_create(match=match_result, tag=tag_model)
                     new_tag_models.append(tag_model)
             else:
@@ -228,19 +237,41 @@ def get_result_on_windows(image, place, resize=None, size=None, browser=None):
     return result
 
 
-def run_program_for_single_img(  # pylint: disable=too-many-branches,
-        image, resize, size, place, match_filter, browser,
-        scraper, disable_tag_print=False, write_tags=False, write_url=False,
-        minimum_similarity=None
-):
-    """Run program for single image."""
-    # compatibility
-    br = browser
+def run_program_for_single_img(  # pylint: disable=too-many-branches, too-many-statements
+    image: str,
+    resize: bool = False,
+    size: Optional[Tuple[int, int]] = None,
+    place: str = DEFAULT_PLACE,
+    match_filter: Optional[str] = None,
+    browser: Optional[mechanicalsoup.StatefulBrowser] = None,
+    scraper: Optional[cfscrape.CloudflareScraper] = None,
+    disable_tag_print: Optional[bool] = False,
+    write_tags: Optional[bool] = False,
+    write_url: Optional[bool] = False,
+    minimum_similarity: Optional[int] = None
+) -> Dict[str, Any]:
+    """Run program for single image.
 
-    error_set = []
+    Args:
+        image: image path
+        resize: resize the image
+        size: resized image size
+        place: iqdb place, see `iqdb_url_dict`
+        match_filter: whitelist matched items
+        browser: mechanicalsoup browser instance
+        scraper: cfscrape instance
+        disable_tag_print: don't print the tag
+        write_tags: write tags as hydrus tag file
+        write_url: write matching items' url to file
+        minimum_similarity: filter result items with minimum similarity
+    """
+    # compatibility
+    br = browser  # type: ignore
+
+    error_set = []  # List[Exception]
     tag_textfile = image + '.txt'
     folder = os.path.dirname(image)
-    result = []
+    result = []  # type: List[models.ImageMatch]
 
     if platform.system() == 'Windows':
         result = get_result_on_windows(
@@ -278,10 +309,9 @@ def run_program_for_single_img(  # pylint: disable=too-many-branches,
         result = [x for x in result if x.similarity >= minimum_similarity]
 
     log.debug('Number of valid result', n=len(result))
+    match_result_tag_pairs = []  # type: List[Tuple[models.Match, List[models.Tag]]]
     for item in result:
-        # type item: models.ImageMatch
-        # type match_result: models.Match object
-        match_result = item.match.match_result
+        match_result = item.match.match_result  # type: models.Match
         url = match_result.link
         log.debug(
             'match status',
@@ -291,6 +321,7 @@ def run_program_for_single_img(  # pylint: disable=too-many-branches,
         try:
             tags = get_tags_from_match_result(match_result, browser, scraper)
             tags_verbose = [x.full_name for x in tags]
+            match_result_tag_pairs.append((match_result, tags))
             log.debug('{} tag(s) founds'.format(len(tags_verbose)))
             if tags and not disable_tag_print:
                 print('\n'.join(tags_verbose))
@@ -306,7 +337,7 @@ def run_program_for_single_img(  # pylint: disable=too-many-branches,
             log.error('Error', e=str(e))
             error_set.append(e)
 
-    return {'error': error_set}
+    return {'error': error_set, 'result': result, 'match result tag pairs': match_result_tag_pairs}
 
 
 @click.group()

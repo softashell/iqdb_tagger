@@ -6,6 +6,7 @@ import logging
 import os
 from difflib import Differ
 from urllib.parse import urljoin, urlparse
+from typing import Tuple, TypeVar
 
 import structlog
 from bs4 import BeautifulSoup
@@ -128,6 +129,9 @@ class MatchTagRelationship(BaseModel):
     tag = ForeignKeyField(Tag)
 
 
+IM = TypeVar('IM', bound='ImageModel')
+
+
 class ImageModel(BaseModel):
     """Image model."""
 
@@ -147,7 +151,7 @@ class ImageModel(BaseModel):
         return os.path.basename(self.path)
 
     @staticmethod
-    def get_or_create_from_path(img_path):
+    def get_or_create_from_path(img_path: str) -> Tuple[IM, bool]:
         """Get or crate from path."""
         checksum = sha256_checksum(img_path)
         img = Image.open(img_path)
@@ -350,7 +354,8 @@ class ThumbnailRelationship(BaseModel):
 
     @staticmethod
     def get_or_create_from_image(
-            image, size, thumb_folder=None, thumb_path=None, img_path=None):
+            image: ImageModel, size: Tuple[int, int],
+            thumb_folder: str = None, thumb_path: str = None, img_path: str = None):
         """Get or create from image."""
         thumbnails = [
             x for x in image.thumbnails
@@ -381,7 +386,7 @@ class ThumbnailRelationship(BaseModel):
                     im.save(thumb_path, 'JPEG')
                 else:
                     raise e
-        thumb, _ = ImageModel.get_or_create_from_path(thumb_path)
+        thumb = ImageModel.get_or_create_from_path(thumb_path)[0]  # type: ImageModel
         return ThumbnailRelationship.get_or_create(
             original=image, thumbnail=thumb)
 
