@@ -3,6 +3,7 @@ python:
   - "3.5"
   - "3.6"
 before_install:
+  - "pip install -U pip"
   - "pip install -e .[dev]"
 install:
   - "pip install -e ."
@@ -11,3 +12,4 @@ script:
   - find . -iname "*.py" -and -not -path './.tox/*' -and -not -path './docs/*' | xargs pylint --rcfile=.pylintrc
   - python -m flake8
   - python3 -m pytest -m "not non_travis_test" .
+  - mypy --config-file mypy.ini .
