@@ -11,6 +11,7 @@ import platform
 import shutil
 
 from bs4 import BeautifulSoup
+from hydrus import Client
 import cfscrape
 import click
 import mechanicalsoup
@@ -439,6 +440,36 @@ def run(
         log.error('Found error(s)')
         for x in error_set:
             log.error('path: ' + x[0] + '\nerror: ' + str(x[1]))
+
+
+@cli.command()
+@click.argument('tag', nargs=-1)
+@click.option('--access_key', help='Hydrus access key')
+def search_hydrus_and_send_tag(tag: List[str], access_key: Optional[str] = None):
+    """Search hydrus and send tag."""
+    # compatibility
+    search_tags = tag
+
+    cl = Client(access_key)
+    file_ids = cl.search_files(search_tags)
+    metadata_sets = cl.file_metadata(file_ids=file_ids, only_identifiers=True)
+    for idx, metadata in enumerate(metadata_sets):
+        f_id, f_hash = metadata['file_id'], metadata['hash']
+        log.info('Metadata', idx=idx, total=len(metadata_sets), id=f_id, hash=f_hash)
+        f_content = cl.get_file(file_id=f_id)
+        init_program()
+        with NamedTemporaryFile(delete=False) as f:
+            f.write(f_content)
+            res_set = run_program_for_single_img(
+                f.name, resize=True, place='iqdb',
+                match_filter='best-match',
+                disable_tag_print=True
+            )
+        tag_sets = [x[1] for x in res_set['match result tag pairs']]
+        tags = list(set(sum(tag_sets, [])))
+        full_name_tags = [x.full_name for x in tags]
+        if full_name_tags:
+            cl.add_tags([f_hash], services_to_tags={'local tags': full_name_tags})
 
 
 if __name__ == '__main__':
