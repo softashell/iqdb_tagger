@@ -8,7 +8,7 @@ import pprint
 import sys
 from tempfile import NamedTemporaryFile
 
-from flask import (
+from flask import (  # type: ignore
     __version__ as flask_version,
     abort,
     current_app,
