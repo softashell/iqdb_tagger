@@ -3,7 +3,8 @@ from os import path
 
 from setuptools import find_packages, setup
 
-__version__ = '0.2.3'
+__version__ = '0.2.4'
+# TODO import version from package
 
 here = path.abspath(path.dirname(__file__))
 
@@ -42,6 +43,7 @@ setup(
         'Flask-WTF>=0.14.2',
         'Flask>=1.0.2',
         'funclog>=0.3.0',
+        'hydrus @ https://gitlab.com/cryzed/hydrus-api/-/archive/master/hydrus-api-master.zip'
         'lxml>=3.8.0',
         'MechanicalSoup>=0.7.0',
         'peewee>=2.10.1',
@@ -59,6 +61,7 @@ setup(
             'flake8-docstrings>=1.1.0',
             'flake8-quotes>=0.11.0',
             'flake8>=3.3.0',
+            'mypy==0.701',
             'pylint>=1.7.2',
             'pytest>=3.1.2',
             'vcrpy>=1.11.1',
