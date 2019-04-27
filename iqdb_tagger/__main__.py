@@ -460,11 +460,18 @@ def search_hydrus_and_send_tag(tag: List[str], access_key: Optional[str] = None)
         init_program()
         with NamedTemporaryFile(delete=False) as f:
             f.write(f_content)
-            res_set = run_program_for_single_img(
-                f.name, resize=True, place='iqdb',
-                match_filter='best-match',
-                disable_tag_print=True
-            )
+            try:
+                res_set = run_program_for_single_img(
+                    f.name, resize=True, place='iqdb',
+                    match_filter='best-match',
+                    disable_tag_print=True
+                )
+            except OSError as err:
+                if "can't identify image file" in str(err):
+                    log.error('File is not identified as an image')
+                else:
+                    log.error(str(err))
+                continue
         tag_sets = [x[1] for x in res_set['match result tag pairs']]
         tags = list(set(sum(tag_sets, [])))
         full_name_tags = [x.full_name for x in tags]
