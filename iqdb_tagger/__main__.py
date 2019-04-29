@@ -475,7 +475,7 @@ def get_hydrus_set(search_tags: List[str], client: Client) -> Iterator[Dict[str,
 @click.argument('tag', nargs=-1)
 @click.option('--access_key', help='Hydrus access key')
 def search_hydrus_and_send_url(tag: List[str], access_key: Optional[str] = None):
-    """Search hydrus and send tag."""
+    """Search hydrus and send url."""
     # compatibility
     search_tags = tag
 
