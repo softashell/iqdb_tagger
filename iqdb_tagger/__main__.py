@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """main module."""
 from tempfile import NamedTemporaryFile
-from typing import Tuple, List, Dict, Any, Union, Optional  # NOQA; pylint: disable=unused-import
+from typing import Any, Dict, Iterator, List, Optional, Tuple  # NOQA; pylint: disable=unused-import
 from urllib.parse import urlparse
 import logging
 import os
@@ -338,7 +338,7 @@ def run_program_for_single_img(  # pylint: disable=too-many-branches, too-many-s
             log.error('Error', e=str(e))
             error_set.append(e)
 
-    return {'error': error_set, 'result': result, 'match result tag pairs': match_result_tag_pairs}
+    return {'error': error_set, 'match result tag pairs': match_result_tag_pairs}
 
 
 @click.group()
@@ -442,15 +442,11 @@ def run(
             log.error('path: ' + x[0] + '\nerror: ' + str(x[1]))
 
 
-@cli.command()
-@click.argument('tag', nargs=-1)
-@click.option('--access_key', help='Hydrus access key')
-def search_hydrus_and_send_tag(tag: List[str], access_key: Optional[str] = None):
-    """Search hydrus and send tag."""
+def get_hydrus_set(search_tags: List[str], client: Client) -> Iterator[Dict[str, Any]]:
+    """Get hydrus result."""
     # compatibility
-    search_tags = tag
+    cl = client
 
-    cl = Client(access_key)
     file_ids = cl.search_files(search_tags)
     metadata_sets = cl.file_metadata(file_ids=file_ids, only_identifiers=True)
     for idx, metadata in enumerate(metadata_sets):
@@ -472,7 +468,37 @@ def search_hydrus_and_send_tag(tag: List[str], access_key: Optional[str] = None)
                 else:
                     log.error(str(err))
                 continue
-        tag_sets = [x[1] for x in res_set['match result tag pairs']]
+            yield {'metadata': metadata, 'iqdb_result': res_set}
+
+
+@cli.command()
+@click.argument('tag', nargs=-1)
+@click.option('--access_key', help='Hydrus access key')
+def search_hydrus_and_send_url(tag: List[str], access_key: Optional[str] = None):
+    """Search hydrus and send tag."""
+    # compatibility
+    search_tags = tag
+
+    cl = Client(access_key)
+    for res_dict in get_hydrus_set(search_tags, cl):
+        match_results = [x[0] for x in res_dict['iqdb_result']['match result tag pairs']]
+        if match_results:
+            for item in match_results:
+                cl.add_url(item.link)
+
+
+@cli.command()
+@click.argument('tag', nargs=-1)
+@click.option('--access_key', help='Hydrus access key')
+def search_hydrus_and_send_tag(tag: List[str], access_key: Optional[str] = None):
+    """Search hydrus and send tag."""
+    # compatibility
+    search_tags = tag
+
+    cl = Client(access_key)
+    for res_dict in get_hydrus_set(search_tags, cl):
+        f_hash = res_dict['metadata']['hash']
+        tag_sets = [x[1] for x in res_dict['iqdb_result']['match result tag pairs']]
         tags = list(set(sum(tag_sets, [])))
         full_name_tags = [x.full_name for x in tags]
         if full_name_tags:
