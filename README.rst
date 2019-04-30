@@ -129,11 +129,6 @@ Or install it manually
 If you are in windows and get SyntaxError, check your python version.
 To install under python3 follow the instruction on this link https://stackoverflow.com/a/18059129/1766261
 
-CHANGELOG
----------
-
-.. include:: changelog.rst
-
 FAQ
 ---
 
