@@ -77,7 +77,6 @@ setup(
     entry_points={
         'console_scripts': [
             'iqdb-tagger = iqdb_tagger.__main__:cli',
-            'iqdb-tagger-server = iqdb_tagger.server:cli',
         ]
     }
 )

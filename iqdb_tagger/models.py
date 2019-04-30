@@ -6,8 +6,11 @@ import logging
 import os
 from difflib import Differ
 from urllib.parse import urljoin, urlparse
-from typing import Tuple, TypeVar
+from typing import List, Optional, Tuple, TypeVar
 
+import cfscrape
+import mechanicalsoup
+import requests
 import structlog
 from bs4 import BeautifulSoup
 from peewee import (
@@ -22,9 +25,12 @@ from peewee import (
 )
 from PIL import Image
 
-from iqdb_tagger.sha256 import sha256_checksum
-from iqdb_tagger.utils import default_db_path
+from .custom_parser import get_tags as get_tags_from_parser
+from .sha256 import sha256_checksum
+from .utils import default_db_path, thumb_folder as default_thumb_folder
 
+
+DEFAULT_SIZE = 150, 150
 db = SqliteDatabase(None)
 log = structlog.getLogger()
 
@@ -346,6 +352,21 @@ class ImageMatch(BaseModel):
         return dict(ImageMatch.SP_CHOICES)[self.search_place]
 
 
+iqdb_url_dict = {
+    'iqdb': ('http://iqdb.org', ImageMatch.SP_IQDB),
+    'danbooru': ('http://danbooru.iqdb.org', ImageMatch.SP_DANBOORU),
+    'e621': ('http://iqdb.harry.lu', ImageMatch.SP_E621),
+    'anime_pictures': ('https://anime-pictures.iqdb.org', ImageMatch.SP_ANIME_PICTURES),
+    'e_shuushuu': ('https://e-shuushuu.iqdb.org', ImageMatch.SP_E_SHUUSHUU),
+    'gelbooru': ('https://gelbooru.iqdb.org', ImageMatch.SP_GELBOORU),
+    'konachan': ('https://konachan.iqdb.org', ImageMatch.SP_KONACHAN),
+    'sankaku': ('https://sankaku.iqdb.org', ImageMatch.SP_SANKAKU),
+    'theanimegallery': ('https://theanimegallery.iqdb.org', ImageMatch.SP_THEANIMEGALLERY),
+    'yandere': ('https://yandere.iqdb.org', ImageMatch.SP_YANDERE),
+    'zerochan': ('https://zerochan.iqdb.org', ImageMatch.SP_ZEROCHAN),
+}
+
+
 class ThumbnailRelationship(BaseModel):
     """Thumbnail tag relationship."""
 
@@ -412,3 +433,106 @@ def init_db(db_path=None, version=1):
         version.save()
     else:
         logging.debug('db already existed.')
+
+
+def get_posted_image(
+        img_path: str,
+        resize: Optional[bool] = False, size: Optional[Tuple[int, int]] = None,
+        output_thumb_folder: Optional[str] = default_thumb_folder,
+        thumb_path: Optional[str] = None) -> ImageModel:
+    """Get posted image."""
+    img = ImageModel.get_or_create_from_path(img_path)[0]  # type: ImageModel
+    def_thumb_rel, _ = ThumbnailRelationship.get_or_create_from_image(
+        image=img,
+        thumb_folder=output_thumb_folder,
+        size=DEFAULT_SIZE,
+        thumb_path=thumb_path,
+        img_path=img_path
+    )
+    resized_thumb_rel = None
+
+    if resize and size:
+        resized_thumb_rel, _ = \
+            ThumbnailRelationship.get_or_create_from_image(
+                image=img,
+                thumb_folder=output_thumb_folder,
+                size=size,
+                img_path=img_path
+            )
+    elif resize:
+        # use thumbnail if no size is given
+        resized_thumb_rel = def_thumb_rel
+    else:
+        # no resize, return actual image
+        return img
+
+    return resized_thumb_rel.thumbnail \
+        if resized_thumb_rel is not None else img
+
+
+def get_page_result(
+        image: str,
+        url: str,
+        browser: Optional[mechanicalsoup.StatefulBrowser] = None,
+        use_requests: Optional[bool] = False):
+    """Get iqdb page result.
+
+    Args:
+        image: image path to be uploaded.
+        url: iqdb url
+        browser: browser instance
+        use_requests: use requests package instead from browser
+
+    Returns:
+        HTML page from the result.
+    """
+    if use_requests:
+        files = {'file': open(image, 'rb')}
+        resp = requests.post(url, files=files, timeout=10)
+        return resp.text
+    browser = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
+    browser.raise_on_404 = True
+    browser.open(url)
+    html_form = browser.select_form('form')
+    html_form.input({'file': image})
+    browser.submit_selected()
+    # if ok, will output: <Response [200]>
+    return browser.get_current_page()
+
+
+def get_tags_from_match_result(
+        match_result: Match,
+        browser: Optional[mechanicalsoup.StatefulBrowser] = None,
+        scraper: Optional[cfscrape.CloudflareScraper] = None
+) -> List[Tag]:
+    """Get tags from match result."""
+    filtered_hosts = ['anime-pictures.net', 'www.theanimegallery.com']
+    res = MatchTagRelationship.select() \
+        .where(MatchTagRelationship.match == match_result)
+    tags = [x.tag for x in res]
+    is_url_in_filtered_hosts = urlparse(match_result.link).netloc in \
+        filtered_hosts
+    if is_url_in_filtered_hosts:
+        log.debug('URL in filtered hosts, no tag fetched', url=match_result.link)
+    elif not tags:
+        try:
+            if browser is None:
+                browser = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
+                browser.raise_on_404 = True
+            browser.open(match_result.link, timeout=10)
+            page = browser.get_current_page()
+            new_tags = get_tags_from_parser(page, match_result.link, scraper)
+            new_tag_models = []
+            if new_tags:
+                for tag in new_tags:
+                    namespace, tag_name = tag
+                    tag_model = Tag.get_or_create(name=tag_name, namespace=namespace)[0]  # type: Tag
+                    MatchTagRelationship.get_or_create(match=match_result, tag=tag_model)
+                    new_tag_models.append(tag_model)
+            else:
+                log.debug('No tags found.')
+
+            tags.extend(new_tag_models)
+        except (requests.exceptions.ConnectionError, mechanicalsoup.LinkNotFoundError) as e:
+            log.error(str(e), url=match_result.link)
+    return tags

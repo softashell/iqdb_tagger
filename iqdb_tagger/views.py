@@ -5,16 +5,19 @@ from urllib.parse import urlparse
 from flask import request, redirect, url_for, current_app, flash, abort
 from flask_admin import AdminIndexView, expose, BaseView
 from flask_paginate import Pagination, get_page_parameter
+from flask_restful import Resource
 import requests
 
-from .models import ImageModel, ImageMatchRelationship, ImageMatch
-from . import forms, models
-from .__main__ import (
-    get_page_result,
+from .models import (
     get_posted_image,
-    get_tags_from_match_result,
+    ImageMatch,
+    ImageMatchRelationship,
+    ImageModel,
     iqdb_url_dict,
+    get_page_result,
+    get_tags_from_match_result,
 )
+from . import forms, models
 
 
 class HomeView(AdminIndexView):
@@ -108,3 +111,31 @@ class MatchView(BaseView):
             except requests.exceptions.ConnectionError as e:
                 current_app.logger.debug(str(e) + 'url:{}'.format(match_result.link))
         return self.render('iqdb_tagger/match_single.html', entry=entry)
+
+
+class MatchViewList(Resource):
+    """Resource api for MatchViewList."""
+
+    def post(self):  # pylint: disable=R0201
+        """Post method for MatchViewList."""
+        f = request.files['file']
+        resize = True
+        place = 'iqdb'
+        with NamedTemporaryFile(delete=False) as temp, NamedTemporaryFile(delete=False) as thumb_temp:
+            f.save(temp.name)
+            posted_img = get_posted_image(
+                img_path=temp.name, resize=resize, thumb_path=thumb_temp.name)
+            url, im_place = iqdb_url_dict[place]
+            query = posted_img.imagematchrelationship_set \
+                .select().join(models.ImageMatch) \
+                .where(models.ImageMatch.search_place == im_place)
+            if not query.exists():
+                try:
+                    posted_img_path = temp.name if not resize else thumb_temp.name
+                    result_page = get_page_result(image=posted_img_path, url=url)
+                except requests.exceptions.ConnectionError as e:
+                    current_app.logger.error(str(e))
+                    abort(400, 'Connection error.')
+                image_match = list(models.ImageMatch.get_or_create_from_page(  # NOQA
+                    page=result_page, image=posted_img, place=im_place))
+        raise NotImplementedError

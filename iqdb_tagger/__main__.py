@@ -4,45 +4,42 @@
 from tempfile import NamedTemporaryFile
 from typing import Any, Dict, Iterator, List, Optional, Tuple  # NOQA; pylint: disable=unused-import
 from urllib.parse import urlparse
-import logging
 import os
 import pathlib
 import platform
+import pprint
 import shutil
+import sys
+import logging
+from logging.handlers import TimedRotatingFileHandler
 
 from bs4 import BeautifulSoup
+from flask_admin import Admin
+from flask_restful import Api
 from hydrus import Client
 import cfscrape
 import click
 import mechanicalsoup
 import requests
 import structlog
+from flask import (   # type: ignore
+    __version__ as flask_version,
+    cli as flask_cli,
+    Flask,
+    send_from_directory,
+)
 
-from . import models
-from .__init__ import db_version
-from .custom_parser import get_tags as get_tags_from_parser
+from . import models, views
+from .__init__ import db_version, __version__
 from .utils import default_db_path, thumb_folder, user_data_dir
+from .models import iqdb_url_dict
 
 db = '~/images/! tagged'
-DEFAULT_SIZE = 150, 150
 DEFAULT_PLACE = 'iqdb'
 minsim = 75
 services = ['1', '2', '3', '4', '5', '6', '10', '11']
 forcegray = False
 log = structlog.getLogger()
-iqdb_url_dict = {
-    'iqdb': ('http://iqdb.org', models.ImageMatch.SP_IQDB),
-    'danbooru': ('http://danbooru.iqdb.org', models.ImageMatch.SP_DANBOORU),
-    'e621': ('http://iqdb.harry.lu', models.ImageMatch.SP_E621),
-    'anime_pictures': ('https://anime-pictures.iqdb.org', models.ImageMatch.SP_ANIME_PICTURES),
-    'e_shuushuu': ('https://e-shuushuu.iqdb.org', models.ImageMatch.SP_E_SHUUSHUU),
-    'gelbooru': ('https://gelbooru.iqdb.org', models.ImageMatch.SP_GELBOORU),
-    'konachan': ('https://konachan.iqdb.org', models.ImageMatch.SP_KONACHAN),
-    'sankaku': ('https://sankaku.iqdb.org', models.ImageMatch.SP_SANKAKU),
-    'theanimegallery': ('https://theanimegallery.iqdb.org', models.ImageMatch.SP_THEANIMEGALLERY),
-    'yandere': ('https://yandere.iqdb.org', models.ImageMatch.SP_YANDERE),
-    'zerochan': ('https://zerochan.iqdb.org', models.ImageMatch.SP_ZEROCHAN),
-}
 
 
 def get_iqdb_result(image, iqdb_url):
@@ -81,108 +78,12 @@ def parse_iqdb_result_page(page):
         yield res
 
 
-def get_page_result(image, url, browser=None, use_requests=False):
-    """Get iqdb page result.
-
-    Args:
-        image: Image path to be uploaded.
-        url: iqdb url
-    Returns:
-        HTML page from the result.
-    """
-    if use_requests:
-        files = {'file': open(image, 'rb')}
-        resp = requests.post(url, files=files, timeout=10)
-        return resp.text
-    browser = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
-    browser.raise_on_404 = True
-    browser.open(url)
-    html_form = browser.select_form('form')
-    html_form.input({'file': image})
-    browser.submit_selected()
-    # if ok, will output: <Response [200]>
-    return browser.get_current_page()
-
-
-def get_posted_image(
-        img_path: str,
-        resize: Optional[bool] = False, size: Optional[Tuple[int, int]] = None,
-        output_thumb_folder: Optional[str] = thumb_folder,
-        thumb_path: Optional[str] = None) -> models.ImageModel:
-    """Get posted image."""
-    img = models.ImageModel.get_or_create_from_path(img_path)[0]  # type: models.ImageModel
-    def_thumb_rel, _ = models.ThumbnailRelationship.get_or_create_from_image(
-        image=img,
-        thumb_folder=output_thumb_folder,
-        size=DEFAULT_SIZE,
-        thumb_path=thumb_path,
-        img_path=img_path
-    )
-    resized_thumb_rel = None
-
-    if resize and size:
-        resized_thumb_rel, _ = \
-            models.ThumbnailRelationship.get_or_create_from_image(
-                image=img,
-                thumb_folder=output_thumb_folder,
-                size=size,
-                img_path=img_path
-            )
-    elif resize:
-        # use thumbnail if no size is given
-        resized_thumb_rel = def_thumb_rel
-    else:
-        # no resize, return models.ImageModel obj
-        return img
-
-    return resized_thumb_rel.thumbnail \
-        if resized_thumb_rel is not None else img
-
-
 def init_program(db_path: Optional[str] = default_db_path):
     """Init program."""
     # create user data dir
     pathlib.Path(user_data_dir).mkdir(parents=True, exist_ok=True)
     pathlib.Path(thumb_folder).mkdir(parents=True, exist_ok=True)
     models.init_db(db_path, db_version)
-
-
-def get_tags_from_match_result(
-        match_result: models.Match,
-        browser: Optional[mechanicalsoup.StatefulBrowser] = None,
-        scraper: Optional[cfscrape.CloudflareScraper] = None
-) -> List[models.Tag]:
-    """Get tags from match result."""
-    filtered_hosts = ['anime-pictures.net', 'www.theanimegallery.com']
-    res = models.MatchTagRelationship.select() \
-        .where(models.MatchTagRelationship.match == match_result)
-    tags = [x.tag for x in res]
-    is_url_in_filtered_hosts = urlparse(match_result.link).netloc in \
-        filtered_hosts
-    if is_url_in_filtered_hosts:
-        log.debug('URL in filtered hosts, no tag fetched', url=match_result.link)
-    elif not tags:
-        try:
-            if browser is None:
-                browser = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
-                browser.raise_on_404 = True
-            browser.open(match_result.link, timeout=10)
-            page = browser.get_current_page()
-            new_tags = get_tags_from_parser(page, match_result.link, scraper)
-            new_tag_models = []
-            if new_tags:
-                for tag in new_tags:
-                    namespace, tag_name = tag
-                    tag_model = models.Tag.get_or_create(name=tag_name, namespace=namespace)[0]  # type: models.Tag
-                    models.MatchTagRelationship.get_or_create(match=match_result, tag=tag_model)
-                    new_tag_models.append(tag_model)
-            else:
-                log.debug('No tags found.')
-
-            tags.extend(new_tag_models)
-        except (requests.exceptions.ConnectionError, mechanicalsoup.LinkNotFoundError) as e:
-            log.error(str(e), url=match_result.link)
-    return tags
 
 
 def write_url_from_match_result(match_result, folder=None):
@@ -224,7 +125,7 @@ def get_result_on_windows(
     shutil.copyfile(image, temp_f.name)
     # get image to be posted based on user input
     try:
-        post_img = get_posted_image(
+        post_img = models.get_posted_image(
             img_path=temp_f.name, resize=resize, size=size, thumb_path=thumb_temp_f.name)
     except OSError as e:
         raise OSError(str(e) + ' when processing {}'.format(image))
@@ -238,7 +139,7 @@ def get_result_on_windows(
         url, im_place = iqdb_url_dict[place]
         use_requests = place != 'e621'
         post_img_path = temp_f.name if not resize else thumb_temp_f.name
-        page = get_page_result(
+        page = models.get_page_result(
             image=post_img_path, url=url, browser=browser, use_requests=use_requests)
         # if ok, will output: <Response [200]>
         result = list(
@@ -299,7 +200,7 @@ def run_program_for_single_img(  # pylint: disable=too-many-branches, too-many-s
         with NamedTemporaryFile(delete=False) as temp, NamedTemporaryFile(delete=False) as thumb_temp:
             shutil.copyfile(image, temp.name)
             try:
-                post_img = get_posted_image(
+                post_img = models.get_posted_image(
                     img_path=temp.name, resize=resize, size=size, thumb_path=thumb_temp.name)
             except OSError as e:
                 raise OSError(str(e) + ' when processing {}'.format(image))
@@ -313,7 +214,7 @@ def run_program_for_single_img(  # pylint: disable=too-many-branches, too-many-s
                 url, im_place = iqdb_url_dict[place]
                 use_requests = place != 'e621'
                 post_img_path = temp.name if not resize else thumb_temp.name
-                page = get_page_result(
+                page = models.get_page_result(
                     image=post_img_path, url=url, browser=br,
                     use_requests=use_requests
                 )
@@ -338,7 +239,7 @@ def run_program_for_single_img(  # pylint: disable=too-many-branches, too-many-s
         log.debug('url', v=url)
 
         try:
-            tags = get_tags_from_match_result(match_result, browser, scraper)
+            tags = models.get_tags_from_match_result(match_result, browser, scraper)
             tags_verbose = [x.full_name for x in tags]
             match_result_tag_pairs.append((match_result, tags))
             log.debug('{} tag(s) founds'.format(len(tags_verbose)))
@@ -359,10 +260,101 @@ def run_program_for_single_img(  # pylint: disable=too-many-branches, too-many-s
     return {'error': error_set, 'match result tag pairs': match_result_tag_pairs}
 
 
-@click.group()
-@click.version_option()
+def thumb(basename):
+    """Get thumbnail."""
+    return send_from_directory(thumb_folder, basename)
+
+
+def create_app(script_info=None):
+    """Create app."""
+    app = Flask(__name__)
+    # logging
+    if not os.path.exists(user_data_dir):
+        os.makedirs(user_data_dir)
+    log_dir = os.path.join(user_data_dir, 'log')
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    peewee_logger = logging.getLogger('peewee')
+    peewee_logger.setLevel(logging.INFO)
+    chardet_logger = logging.getLogger('chardet')
+    chardet_logger.setLevel(logging.INFO)
+    default_log_file = os.path.join(log_dir, 'iqdb_tagger_server.log')
+    file_handler = TimedRotatingFileHandler(default_log_file, 'midnight')
+    file_handler.setLevel(logging.WARNING)
+    file_handler.setFormatter(logging.Formatter('<%(asctime)s> <%(levelname)s> %(message)s'))
+    app.logger.addHandler(file_handler)
+    app.logger.addHandler(peewee_logger)
+    app.logger.addHandler(chardet_logger)
+    # reloader
+    reloader = app.config['TEMPLATES_AUTO_RELOAD'] = \
+        bool(os.getenv('IQDB_TAGGER_RELOADER')) or app.config['TEMPLATES_AUTO_RELOAD']  # NOQA
+    if reloader:
+        app.jinja_env.auto_reload = True
+    app.config['SECRET_KEY'] = os.getenv('IQDB_TAGGER_SECRET_KEY') or os.urandom(24)
+    app.config['WTF_CSRF_ENABLED'] = False
+    # debug
+    debug = app.config['DEBUG'] = bool(os.getenv('IQDB_TAGGER_DEBUG')) or app.config['DEBUG']
+    if debug:
+        app.config['DEBUG'] = True
+        app.config['LOGGER_HANDLER_POLICY'] = 'debug'
+        logging.basicConfig(level=logging.DEBUG)
+        pprint.pprint(app.config)
+        print('Log file: {}'.format(default_log_file))
+        print('script info:{}'.format(script_info))
+    db_path = os.getenv('IQDB_TAGGER_DB_PATH') or default_db_path
+    init_program()
+    models.init_db(db_path)
+    # app and db
+    app.app_context().push()
+
+    @app.shell_context_processor
+    def shell_context():  # pylint: disable=unused-variable
+        return {'app': app}
+
+    # api
+    api = Api(app)
+    api.add_resource(views.MatchViewList, '/api/matchview')
+    # flask-admin
+    app_admin = Admin(
+        app, name='IQDB Tagger', template_mode='bootstrap3',
+        index_view=views.HomeView(name='Home', template='iqdb_tagger/index.html', url='/'))
+    app_admin.add_view(views.MatchView())
+    # app_admin.add_view(ModelView(ImageMatch, category='DB'))
+    # app_admin.add_view(ModelView(ImageMatchRelationship, category='DB'))
+    # app_admin.add_view(ModelView(ImageModel, category='DB'))
+    # app_admin.add_view(ModelView(MatchTagRelationship, category='DB'))
+    # routing
+    app.add_url_rule('/thumb/<path:basename>', view_func=thumb)
+    return app
+
+
+class CustomFlaskGroup(flask_cli.FlaskGroup):
+    """Custom Flask Group."""
+
+    def __init__(self, **kwargs):
+        """Class init."""
+        super().__init__(**kwargs)
+        self.params[0].help = 'Show the program version'
+        self.params[0].callback = get_custom_version
+
+
+def get_custom_version(ctx, _, value):
+    """Get version."""
+    if not value or ctx.resilient_parsing:
+        return
+    message = '%(app_name)s %(app_version)s\nFlask %(version)s\nPython %(python_version)s'
+    click.echo(message % {
+        'app_name': 'Iqdb-tagger',
+        'app_version': __version__,
+        'version': flask_version,
+        'python_version': sys.version,
+    }, color=ctx.color)
+    ctx.exit()
+
+
+@click.group(cls=CustomFlaskGroup, create_app=create_app)
 def cli():
-    """Run cli."""
+    """Run cli. This is a management script for application."""
 
 
 @cli.command()
@@ -392,7 +384,7 @@ def cli():
 @click.option(
     '--abort-on-error', is_flag=True, help='Stop program when error occured')
 @click.argument('prog-input')
-def run(
+def cli_run(
     prog_input=None, resize=False, size=None,
     db_path=None, place=DEFAULT_PLACE, match_filter='default',
     input_mode='default', verbose=False, debug=False,
@@ -462,7 +454,7 @@ def run(
 
 def get_hydrus_set(search_tags: List[str], client: Client) -> Iterator[Dict[str, Any]]:
     """Get hydrus result.
-    
+
     Args:
         search_tags: tags used to search hydrus
         client: client instance

@@ -29,12 +29,12 @@ To parse folder of images (e.g. in this example :code:`image_folder:`) and write
 
 .. code:: bash
 
-    iqdb-tagger run --resize --match-filter best-match --write-tags --input-mode folder image_folder
+    iqdb-tagger cli-run --resize --match-filter best-match --write-tags --input-mode folder image_folder
 
 
 Use as Hydrus iqdb script server
 ````````````````````````````````
-1. Run :code:`iqdb-tagger-server run` and note the server address.
+1. Run :code:`iqdb-tagger run` and note the server address.
 
   To run it on `127.0.0.1` on port `5006`, run the following command:
 
