@@ -196,8 +196,23 @@ def write_url_from_match_result(match_result, folder=None):
         f.write('\n')
 
 
-def get_result_on_windows(image, place, resize=None, size=None, browser=None):
-    """Get result on Windows."""
+def get_result_on_windows(
+        image: str, place: str,
+        resize: Optional[bool] = False, size: Optional[Tuple[int, int]] = None,
+        browser: Optional[mechanicalsoup.StatefulBrowser] = None
+) -> List[models.ImageMatch]:
+    """Get result on Windows.
+
+    Args:
+        image: image path
+        place: iqdb place code
+        resize: resize the image
+        size: resized image size
+        browser: browser instance
+
+    Returns:
+        matching items
+    """
     result = []
     # temp_f
     temp_f = NamedTemporaryFile(mode='w+t', delete=False)
@@ -265,6 +280,9 @@ def run_program_for_single_img(  # pylint: disable=too-many-branches, too-many-s
         write_tags: write tags as hydrus tag file
         write_url: write matching items' url to file
         minimum_similarity: filter result items with minimum similarity
+
+    Returns:
+        iqdb result and collected errors
     """
     # compatibility
     br = browser  # type: ignore
@@ -443,7 +461,15 @@ def run(
 
 
 def get_hydrus_set(search_tags: List[str], client: Client) -> Iterator[Dict[str, Any]]:
-    """Get hydrus result."""
+    """Get hydrus result.
+    
+    Args:
+        search_tags: tags used to search hydrus
+        client: client instance
+
+    Returns:
+        hydrus metadata and iqdb results
+    """
     # compatibility
     cl = client
 
