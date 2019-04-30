@@ -40,7 +40,7 @@ Use as Hydrus iqdb script server
 
 .. code:: bash
 
-    `iqdb-tagger-server run -h 127.0.0.1 -p 5006`
+    `iqdb-tagger run -h 127.0.0.1 -p 5006`
   
 2. Import one of the parsing scripts below to Hydrus parsing scripts.
 3. Check the server address and edit it as needed.
