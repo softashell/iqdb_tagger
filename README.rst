@@ -53,16 +53,20 @@ IQDB parsing script
 
 Every uploaded and match history can be seen on Front page (in this case http://127.0.0.1:5006).
 
-Search hydrus and send matching tags
-````````````````````````````````````
+Using IQDB-tagger with Hydrus API
+`````````````````````````````````
+
 Set up your hydrus to get the access key, which will be used for this feature.
 
 
-after that you can run the command below. For example to tag the image tagged as 'thread:cat' on hydrus
+after that you can run the command below. For example to run the command with image tagged as 'thread:cat' on hydrus
 
 .. code:: bash
 
+   # to get tags
    iqdb-tagger search-hydrus-and-send-tag --access-key 1234_your_access_key 'thread:cat'
+   # to get matching urls
+   iqdb-tagger search-hydrus-and-send-url --access-key 1234_your_access_key 'thread:cat'
 
 Note: hydrus version 349 have default bandwidth of 100 mb data per month,
 which may raise `ApiError` when the bandwidth reached.
