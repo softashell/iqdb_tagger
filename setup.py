@@ -1,10 +1,17 @@
 """setup file."""
 from os import path
+from typing import Dict  # NOQA
 
+from distutils.util import convert_path  # NOQA; pylint: disable=import-error,E0611
 from setuptools import find_packages, setup
 
-__version__ = '0.2.4'
-# TODO import version from package
+# get version from package
+#  https://stackoverflow.com/a/24517154/1766261
+main_ns = {}  # type: Dict
+ver_path = convert_path('iqdb_tagger/__init__.py')
+with open(ver_path) as ver_file:
+    exec(ver_file.read(), main_ns)  # NOQA; pylint: disable=w0122
+__version__ = main_ns['__version__']
 
 here = path.abspath(path.dirname(__file__))
 
