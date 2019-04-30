@@ -16,7 +16,10 @@ from logging.handlers import TimedRotatingFileHandler
 from bs4 import BeautifulSoup
 from flask_admin import Admin
 from flask_restful import Api
-from hydrus import Client
+try:
+    from hydrus import Client
+except ImportError:
+    Client = None
 import cfscrape
 import click
 import mechanicalsoup

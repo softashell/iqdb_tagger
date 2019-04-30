@@ -1,5 +1,5 @@
 """setup file."""
-from os import path
+from os import environ, path
 from typing import Dict  # NOQA
 
 from distutils.util import convert_path  # NOQA; pylint: disable=import-error,E0611
@@ -18,6 +18,12 @@ here = path.abspath(path.dirname(__file__))
 # Get the long description from the README file
 with open(path.join(here, 'README.rst')) as f:
     long_description = f.read()
+
+
+hydrus_pkg =  \
+    ['hydrus @ https://gitlab.com/cryzed/hydrus-api/-/archive/master/hydrus-api-master.zip'] \
+    if 'TRAVIS' not in environ else []
+
 
 setup(
     name='iqdb_tagger',
@@ -50,14 +56,13 @@ setup(
         'Flask-WTF>=0.14.2',
         'Flask>=1.0.2',
         'funclog>=0.3.0',
-        'hydrus @ https://gitlab.com/cryzed/hydrus-api/-/archive/master/hydrus-api-master.zip'
         'lxml>=3.8.0',
         'MechanicalSoup>=0.7.0',
         'peewee>=2.10.1',
         'Pillow>=4.2.1',
         'structlog>=17.2.0',
         'wtf-peewee>=3.0.0',
-    ],
+    ] + hydrus_pkg,
     extras_require={
         'doc': [
             'sphinx-autobuild>=0.7.1',
