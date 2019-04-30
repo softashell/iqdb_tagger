@@ -372,7 +372,7 @@ def cli():
     '--match-filter', type=click.Choice(['default', 'best-match']),
     default='default', help='Filter the result.'
 )
-@click.option('--write-tags', is_flag=True, help='Write best match\'s tags to text.')
+@click.option('--write-tags', is_flag=True, help="Write best match's tags to text.")
 @click.option('--write-url', is_flag=True, help='Write match url to text.')
 @click.option(
     '--input-mode', type=click.Choice(['default', 'folder']),
