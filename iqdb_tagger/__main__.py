@@ -13,9 +13,6 @@ import sys
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
-from bs4 import BeautifulSoup
-from flask_admin import Admin
-from flask_restful import Api
 try:
     from hydrus import Client
 except ImportError:
@@ -25,6 +22,9 @@ import click
 import mechanicalsoup
 import requests
 import structlog
+from bs4 import BeautifulSoup
+from flask_admin import Admin
+from flask_restful import Api
 from flask import (   # type: ignore
     __version__ as flask_version,
     cli as flask_cli,
@@ -71,12 +71,8 @@ def parse_iqdb_result_page(page):
         res = models.ImageMatch.parse_table(table)
         if not res:
             continue
-        a_tags = table.select('a')
-        assert len(a_tags) < 3, "Unexpected html received at parse_page. Malformed link"
-        if len(a_tags) == 2:
-            additional_res = res
-            additional_res['href'] = \
-                a_tags[1].attrs.get('href', None)
+        additional_res = models.get_additional_result_from_table(table, res)
+        if additional_res:
             yield additional_res
         yield res
 

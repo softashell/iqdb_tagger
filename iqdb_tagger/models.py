@@ -6,13 +6,13 @@ import logging
 import os
 from difflib import Differ
 from urllib.parse import urljoin, urlparse
-from typing import List, Optional, Tuple, TypeVar
+from typing import Any, Dict, List, Optional, Tuple, TypeVar
 
 import cfscrape
 import mechanicalsoup
 import requests
 import structlog
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, element
 from peewee import (
     BooleanField,
     CharField,
@@ -302,12 +302,8 @@ class ImageMatch(BaseModel):
             res = ImageMatch.parse_table(table)
             if not res:
                 continue
-            a_tags = table.select('a')
-            assert len(a_tags) < 3, "Unexpected html received at parse_page. Malformed link"
-            if len(a_tags) == 2:
-                additional_res = res
-                additional_res['href'] = \
-                    a_tags[1].attrs.get('href', None)
+            additional_res = get_additional_result_from_table(table, res)
+            if additional_res:
                 yield additional_res
             yield res
 
@@ -350,6 +346,17 @@ class ImageMatch(BaseModel):
     def search_place_verbose(self):
         """Get verbose search place."""
         return dict(ImageMatch.SP_CHOICES)[self.search_place]
+
+
+def get_additional_result_from_table(table: element.Tag, last_result: Dict[str, Any]) -> Dict[str, Any]:
+    """Get additional result from html table."""
+    a_tags = table.select('a')
+    assert len(a_tags) < 3, "Unexpected html received at parse_page. Malformed link"
+    additional_res = {}  # type: Dict[str, Any]
+    if len(a_tags) == 2:
+        additional_res = last_result
+        additional_res['href'] = a_tags[1].attrs.get('href', None)
+    return additional_res
 
 
 iqdb_url_dict = {

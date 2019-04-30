@@ -53,6 +53,7 @@ setup(
         'click>=7.0',
         'Flask-Admin>=1.5.2',
         'flask-paginate>=0.5.1',
+        'Flask-RESTful==0.3.6',
         'Flask-WTF>=0.14.2',
         'Flask>=1.0.2',
         'funclog>=0.3.0',
