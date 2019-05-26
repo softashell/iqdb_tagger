@@ -1,3 +1,9 @@
+0.3.0 (2019-04-30)
+``````````````````
+- search and send tag to hydrus
+- search and send url to hydrus
+- merge cli and server
+
 0.2.2 (2018-07-01)
 ``````````````````
 - minimum similarity

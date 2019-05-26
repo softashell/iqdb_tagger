@@ -29,18 +29,18 @@ To parse folder of images (e.g. in this example :code:`image_folder:`) and write
 
 .. code:: bash
 
-    iqdb-tagger run --resize --match-filter best-match --write-tags --input-mode folder image_folder
+    iqdb-tagger cli-run --resize --match-filter best-match --write-tags --input-mode folder image_folder
 
 
 Use as Hydrus iqdb script server
 ````````````````````````````````
-1. Run :code:`iqdb-tagger-server run` and note the server address.
+1. Run :code:`iqdb-tagger run` and note the server address.
 
   To run it on `127.0.0.1` on port `5006`, run the following command:
 
 .. code:: bash
 
-    `iqdb-tagger-server run -h 127.0.0.1 -p 5006`
+    `iqdb-tagger run -h 127.0.0.1 -p 5006`
   
 2. Import one of the parsing scripts below to Hydrus parsing scripts.
 3. Check the server address and edit it as needed.
@@ -52,6 +52,26 @@ IQDB parsing script
     [32, "local iqdb", 2, ["http://127.0.0.1:5006", 1, 0, [55, 1, [[], "some hash bytes"]], "file", {"place": "0", "resize": "on"}, [[29, 1, ["link", [27, 5, [[["a", {"data-status": "best-match", "class": "img-match-detail"}, null]], 0, "href", [51, 1, [3, "", null, null, "example string"]], [55, 1, [[], "parsed information"]]]], [[30, 2, ["", 0, [27, 5, [[["li", {"class": "tag-creator"}, null]], 1, "", [51, 1, [3, "", null, null, "example string"]], [55, 1, [[], "parsed information"]]]], "creator"]], [30, 2, ["", 0, [27, 5, [[["li", {"class": "tag-series"}, null]], 1, "", [51, 1, [3, "", null, null, "example string"]], [55, 1, [[], "parsed information"]]]], "series"]], [30, 2, ["", 0, [27, 5, [[["li", {"class": "tag-character"}, null]], 1, "", [51, 1, [3, "", null, null, "example string"]], [55, 1, [[], "parsed information"]]]], "character"]], [30, 2, ["", 0, [27, 5, [[["li", {"class": "tag-general"}, null]], 1, "", [51, 1, [3, "", null, null, "example string"]], [55, 1, [[], "parsed information"]]]], ""]]]]]]]]
 
 Every uploaded and match history can be seen on Front page (in this case http://127.0.0.1:5006).
+
+Using IQDB-tagger with Hydrus API
+`````````````````````````````````
+
+Set up your hydrus to get the access key, which will be used for this feature.
+
+
+after that you can run the command below. For example to run the command with image tagged as 'thread:cat' on hydrus
+
+.. code:: bash
+
+   # to get tags
+   iqdb-tagger search-hydrus-and-send-tag --access-key 1234_your_access_key 'thread:cat'
+   # to get matching urls
+   iqdb-tagger search-hydrus-and-send-url --access-key 1234_your_access_key 'thread:cat'
+
+Note: hydrus version 349 have default bandwidth of 100 mb data per month,
+which may raise `ApiError` when the bandwidth reached.
+
+to fix it, go to `services` menu -> `manage services` -> client api and raise your bandwidth limit
 
 Setting Hydrus iqdb script server on NAS
 ````````````````````````````````````````
@@ -108,11 +128,6 @@ Or install it manually
 
 If you are in windows and get SyntaxError, check your python version.
 To install under python3 follow the instruction on this link https://stackoverflow.com/a/18059129/1766261
-
-CHANGELOG
----------
-
-.. include:: changelog.rst
 
 FAQ
 ---

@@ -1,4 +1,6 @@
 """parser module."""
+from typing import Optional, List, Union
+
 import bs4
 import cfscrape
 import structlog
@@ -6,10 +8,17 @@ import structlog
 log = structlog.getLogger()
 
 
-def get_tags(page, url, scraper=None):
+def get_tags(
+        page: bs4.BeautifulSoup,
+        url: str,
+        scraper: Optional[cfscrape.CloudflareScraper] = None
+) -> Union[List[str], None]:
     """Get tags by parsing page from the url.
 
-    url is used as hint to choose which parser will be used.
+    Args:
+        page: page content
+        url: page url, used as hint to choose which parser will be used.
+        scraper: scraper instance
     """
     parser = [
         ChanSankakuParser,
@@ -21,7 +30,7 @@ def get_tags(page, url, scraper=None):
         YandereParser,
         ZerochanParser,
     ]
-    log.debug('url', url=url)
+    result = []  # type: List[str]
     for item in parser:
         obj = item(url, page, scraper)
         if obj.is_url(url):
@@ -29,6 +38,7 @@ def get_tags(page, url, scraper=None):
             result = list(obj.get_tags())
             return result
     log.debug('No parser found', url=url)
+    return []
 
 
 class CustomParser:
@@ -45,7 +55,7 @@ class CustomParser:
         """Check url."""
         raise NotImplementedError
 
-    def get_tags(self):
+    def get_tags(self) -> List[str]:
         """Get tags."""
         raise NotImplementedError
 
