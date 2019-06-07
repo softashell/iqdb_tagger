@@ -29,7 +29,7 @@ class HomeView(AdminIndexView):
         form = forms.ImageUploadForm()
         if form.file.data:
             print('resize:{}'.format(form.resize.data))
-            with NamedTemporaryFile() as temp, NamedTemporaryFile() as thumb_temp:
+            with NamedTemporaryFile(delete=False) as temp, NamedTemporaryFile(delete=False) as thumb_temp:
                 form.file.data.save(temp.name)
                 posted_img = get_posted_image(
                     img_path=temp.name, resize=form.resize.data, thumb_path=thumb_temp.name)
