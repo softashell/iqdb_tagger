@@ -1,7 +1,6 @@
 """views module."""
 from tempfile import NamedTemporaryFile
 from urllib.parse import urlparse
-import platform
 
 from flask import request, redirect, url_for, current_app, flash, abort
 from flask_admin import AdminIndexView, expose, BaseView
