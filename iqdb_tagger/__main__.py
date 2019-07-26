@@ -495,6 +495,9 @@ def search_hydrus_and_send_url(tag: List[str], access_key: Optional[str] = None)
     """Search hydrus and send url."""
     # compatibility
     search_tags = tag
+    if Client is None:
+        print('Hydrus package is required')
+        return
 
     cl = Client(access_key)
     for res_dict in get_hydrus_set(search_tags, cl):
@@ -511,6 +514,9 @@ def search_hydrus_and_send_tag(tag: List[str], access_key: Optional[str] = None)
     """Search hydrus and send tag."""
     # compatibility
     search_tags = tag
+    if Client is None:
+        print('Hydrus package is required')
+        return
 
     cl = Client(access_key)
     for res_dict in get_hydrus_set(search_tags, cl):
