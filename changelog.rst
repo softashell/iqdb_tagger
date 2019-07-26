@@ -1,3 +1,10 @@
+0.3.1 (2019-07-26)
+``````````````````
+
+- fix permission error
+- fix minimum similarity
+- update hydrus requirement
+
 0.3.0 (2019-04-30)
 ``````````````````
 - search and send tag to hydrus

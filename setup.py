@@ -63,7 +63,7 @@ setup(
         'Pillow>=4.2.1',
         'structlog>=17.2.0',
         'wtf-peewee>=3.0.0',
-    ] + hydrus_pkg,
+    ],
     extras_require={
         'doc': [
             'sphinx-autobuild>=0.7.1',
@@ -79,6 +79,7 @@ setup(
             'pytest>=3.1.2',
             'vcrpy>=1.11.1',
         ],
+        'hydrus': hydrus_pkg
     },
     entry_points={
         'console_scripts': [

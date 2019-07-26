@@ -225,7 +225,7 @@ def run_program_for_single_img(  # pylint: disable=too-many-branches, too-many-s
     if match_filter == 'best-match':
         result = [x for x in result if x.status == x.STATUS_BEST_MATCH]
     if minimum_similarity:
-        result = [x for x in result if x.similarity >= minimum_similarity]
+        result = [x for x in result if float(x.similarity) >= minimum_similarity]
 
     log.debug('Number of valid result', n=len(result))
     match_result_tag_pairs = []  # type: List[Tuple[models.Match, List[models.Tag]]]
@@ -495,6 +495,9 @@ def search_hydrus_and_send_url(tag: List[str], access_key: Optional[str] = None)
     """Search hydrus and send url."""
     # compatibility
     search_tags = tag
+    if Client is None:
+        print('Hydrus package is required')
+        return
 
     cl = Client(access_key)
     for res_dict in get_hydrus_set(search_tags, cl):
@@ -511,6 +514,9 @@ def search_hydrus_and_send_tag(tag: List[str], access_key: Optional[str] = None)
     """Search hydrus and send tag."""
     # compatibility
     search_tags = tag
+    if Client is None:
+        print('Hydrus package is required')
+        return
 
     cl = Client(access_key)
     for res_dict in get_hydrus_set(search_tags, cl):

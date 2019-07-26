@@ -58,8 +58,14 @@ Using IQDB-tagger with Hydrus API
 
 Set up your hydrus to get the access key, which will be used for this feature.
 
+Install the required hydrus package 
 
-after that you can run the command below. For example to run the command with image tagged as 'thread:cat' on hydrus
+.. code:: bash
+
+   pip install https://gitlab.com/cryzed/hydrus-api/-/archive/master/hydrus-api-master.zip
+
+
+After that you can run the command below. For example to run the command with image tagged as 'thread:cat' on hydrus
 
 .. code:: bash
 
