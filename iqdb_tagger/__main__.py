@@ -492,7 +492,8 @@ def get_hydrus_set(search_tags: List[str], client: Client) -> Iterator[Dict[str,
 @click.argument('tag', nargs=-1)
 @click.option('--access_key', help='Hydrus access key')
 @click.option('--hydrus_url', help='URL for hydrus client e.g. http://127.0.0.1:45869/')
-def search_hydrus_and_send_url(tag: List[str], access_key: Optional[str] = None, hydrus_url: Optional[str] = 'http://127.0.0.1:45869/'):
+def search_hydrus_and_send_url(
+        tag: List[str], access_key: Optional[str] = None, hydrus_url: Optional[str] = 'http://127.0.0.1:45869/'):
     """Search hydrus and send url."""
     # compatibility
     search_tags = tag
@@ -500,7 +501,10 @@ def search_hydrus_and_send_url(tag: List[str], access_key: Optional[str] = None,
         print('Hydrus package is required')
         return
 
-    cl = Client(access_key, hydrus_url)
+    args = [access_key]
+    if hydrus_url:
+        args.append(hydrus_url)
+    cl = Client(*args)
     for res_dict in get_hydrus_set(search_tags, cl):
         match_results = [x[0] for x in res_dict['iqdb_result']['match result tag pairs']]
         if match_results:
@@ -512,8 +516,11 @@ def search_hydrus_and_send_url(tag: List[str], access_key: Optional[str] = None,
 @click.argument('tag', nargs=-1)
 @click.option('--access_key', help='Hydrus access key')
 @click.option('--hydrus_url', help='URL for hydrus client e.g. http://127.0.0.1:45869/')
-@click.option('--tag_repo', help='tag repo name e.g. local tags')
-def search_hydrus_and_send_tag(tag: List[str], access_key: Optional[str] = None, hydrus_url: Optional[str] = 'http://127.0.0.1:45869/', tag_repo: Optional[str] = 'local tags'):
+@click.option('--tag_repo', help='tag repo name e.g. local tags', default='local tags')
+def search_hydrus_and_send_tag(
+        tag: List[str], access_key: Optional[str] = None,
+        hydrus_url: Optional[str] = 'http://127.0.0.1:45869/',
+        tag_repo: Optional[str] = 'local tags'):
     """Search hydrus and send tag."""
     # compatibility
     search_tags = tag
@@ -521,7 +528,10 @@ def search_hydrus_and_send_tag(tag: List[str], access_key: Optional[str] = None,
         print('Hydrus package is required')
         return
 
-    cl = Client(access_key, hydrus_url)
+    args = [access_key]
+    if hydrus_url:
+        args.append(hydrus_url)
+    cl = Client(*args)
     for res_dict in get_hydrus_set(search_tags, cl):
         f_hash = res_dict['metadata']['hash']
         tag_sets = [x[1] for x in res_dict['iqdb_result']['match result tag pairs']]
