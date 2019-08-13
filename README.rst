@@ -70,9 +70,9 @@ After that you can run the command below. For example to run the command with im
 .. code:: bash
 
    # to get tags
-   iqdb-tagger search-hydrus-and-send-tag --access-key 1234_your_access_key 'thread:cat'
+   iqdb-tagger search-hydrus-and-send-tag --access_key 1234_your_access_key 'thread:cat'
    # to get matching urls
-   iqdb-tagger search-hydrus-and-send-url --access-key 1234_your_access_key 'thread:cat'
+   iqdb-tagger search-hydrus-and-send-url --access_key 1234_your_access_key 'thread:cat'
 
 Note: hydrus version 349 have default bandwidth of 100 mb data per month,
 which may raise `ApiError` when the bandwidth reached.
