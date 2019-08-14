@@ -75,6 +75,7 @@ setup(
             'flake8-quotes>=0.11.0',
             'flake8>=3.3.0',
             'mypy==0.701',
+            'pydocstyle<4.0.0',
             'pylint>=1.7.2',
             'pytest>=3.1.2',
             'vcrpy>=1.11.1',
