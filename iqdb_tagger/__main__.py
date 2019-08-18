@@ -468,9 +468,8 @@ def get_hydrus_set(search_tags: List[str], client: Client) -> Iterator[Dict[str,
     file_ids = cl.search_files(search_tags)
     file_ids_chunks = yield_chunks(file_ids, 100)
     metadata_sets = []  # type: List[Dict[str, Any]]
-    for chunk in file_ids_chunks:
-        for file_ids in chunk:
-            metadata_sets.extend(cl.file_metadata(file_ids=file_ids, only_identifiers=True))
+    for file_ids in file_ids_chunks:
+        metadata_sets.extend(cl.file_metadata(file_ids=file_ids, only_identifiers=True))
     for idx, metadata in enumerate(metadata_sets):
         f_id, f_hash = metadata['file_id'], metadata['hash']
         log.info('Metadata', idx=idx, total=len(metadata_sets), id=f_id, hash=f_hash)
