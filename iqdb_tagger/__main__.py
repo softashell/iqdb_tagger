@@ -466,6 +466,9 @@ def get_hydrus_set(search_tags: List[str], client: Client) -> Iterator[Dict[str,
     cl = client
 
     file_ids = cl.search_files(search_tags)
+    if not file_ids:
+        print('No File id found.')
+        return
     file_ids_chunks = yield_chunks(file_ids, 100)
     metadata_sets = []  # type: List[Dict[str, Any]]
     for file_ids in file_ids_chunks:
