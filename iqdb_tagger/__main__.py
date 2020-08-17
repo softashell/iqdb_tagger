@@ -383,7 +383,7 @@ def cli() -> None:
 )
 @click.option('--verbose', '-v', is_flag=True, help='Verbose output.')
 @click.option('--debug', '-d', is_flag=True, help='Print debug output.')
-@click.option(
+@click.option(  # pylint: disable=too-many-branches
     '--abort-on-error', is_flag=True, help='Stop program when error occured')
 @click.argument('prog-input')
 def cli_run(
