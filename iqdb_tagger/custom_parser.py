@@ -1,5 +1,5 @@
 """parser module."""
-from typing import Optional, List, Union
+from typing import Optional, List, Tuple
 
 import bs4
 import cfscrape
@@ -12,7 +12,7 @@ def get_tags(
         page: bs4.BeautifulSoup,
         url: str,
         scraper: Optional[cfscrape.CloudflareScraper] = None
-) -> Union[List[str], None]:
+) -> Optional[List[Tuple[str, str]]]:
     """Get tags by parsing page from the url.
 
     Args:
@@ -30,13 +30,11 @@ def get_tags(
         YandereParser,
         ZerochanParser,
     ]
-    result = []  # type: List[str]
     for item in parser:
         obj = item(url, page, scraper)
         if obj.is_url(url):
             log.debug('match', parser=item)
-            result = list(obj.get_tags())
-            return result
+            return list(obj.get_tags())
     log.debug('No parser found', url=url)
     return []
 
@@ -55,7 +53,7 @@ class CustomParser:
         """Check url."""
         raise NotImplementedError
 
-    def get_tags(self) -> List[str]:
+    def get_tags(self) -> List[Tuple[str, str]]:
         """Get tags."""
         raise NotImplementedError
 

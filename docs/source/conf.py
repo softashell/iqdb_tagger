@@ -13,8 +13,9 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
 import os
+import sys
+import typing
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -77,7 +78,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = []
+exclude_patterns: typing.List[typing.Any] = []
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -209,7 +210,7 @@ htmlhelp_basename = 'iqdb_taggerdoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
-latex_elements = {
+latex_elements: typing.Dict[typing.Any, typing.Any] = {
 # The paper size ('letterpaper' or 'a4paper').
 #'papersize': 'letterpaper',
 
