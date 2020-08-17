@@ -2,6 +2,7 @@
 .mypy_cache/*
 dist/*
 iqdb_tagger.egg-info/*
+iqdb_tagger/*.py@neomake_*.py
 iqdb_tagger/note.md
 main.yml
 tests/__pycache__/*
