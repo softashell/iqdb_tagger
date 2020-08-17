@@ -1,42 +1,43 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 """main module."""
-from tempfile import NamedTemporaryFile
-from typing import Any, Dict, Iterator, List, Optional, Tuple  # NOQA; pylint: disable=unused-import
-from urllib.parse import urlparse
+import logging
 import os
 import pathlib
 import platform
 import pprint
 import shutil
 import sys
-import logging
 from logging.handlers import TimedRotatingFileHandler
+from tempfile import NamedTemporaryFile
+from typing import Any, Dict, Iterator, List, Optional, Tuple  # NOQA; pylint: disable=unused-import
+from urllib.parse import urlparse
 
-try:
-    from hydrus import Client
-    from hydrus.utils import yield_chunks
-except ImportError:
-    Client = None
 import cfscrape
 import click
 import mechanicalsoup
 import requests
 import structlog
 from bs4 import BeautifulSoup
+from flask import Flask
+from flask import __version__ as flask_version  # type: ignore
+from flask import cli as flask_cli
+from flask import send_from_directory
 from flask_admin import Admin
 from flask_restful import Api
-from flask import (   # type: ignore
-    __version__ as flask_version,
-    cli as flask_cli,
-    Flask,
-    send_from_directory,
-)
 
 from . import models, views
-from .__init__ import db_version, __version__
-from .utils import default_db_path, thumb_folder, user_data_dir
+from .__init__ import __version__, db_version
 from .models import iqdb_url_dict
+from .utils import default_db_path, thumb_folder, user_data_dir
+
+
+try:
+    from hydrus import Client
+    from hydrus.utils import yield_chunks
+except ImportError:
+    Client = None
+
 
 db = '~/images/! tagged'
 DEFAULT_PLACE = 'iqdb'
@@ -46,7 +47,7 @@ forcegray = False
 log = structlog.getLogger()
 
 
-def get_iqdb_result(image, iqdb_url):
+def get_iqdb_result(image: str, iqdb_url: str) -> Any:
     """Get iqdb result."""
     e621_iqdb_url = 'http://iqdb.harry.lu'
     use_requests = iqdb_url != e621_iqdb_url
@@ -65,7 +66,7 @@ def get_iqdb_result(image, iqdb_url):
     return parse_iqdb_result_page(html_text)
 
 
-def parse_iqdb_result_page(page):
+def parse_iqdb_result_page(page: Any) -> Iterator[Any]:
     """Parse iqdb result page."""
     tables = page.select('.pages table')
     for table in tables:
@@ -78,7 +79,7 @@ def parse_iqdb_result_page(page):
         yield res
 
 
-def init_program(db_path: Optional[str] = default_db_path):
+def init_program(db_path: str = default_db_path) -> None:
     """Init program."""
     # create user data dir
     pathlib.Path(user_data_dir).mkdir(parents=True, exist_ok=True)
@@ -86,7 +87,7 @@ def init_program(db_path: Optional[str] = default_db_path):
     models.init_db(db_path, db_version)
 
 
-def write_url_from_match_result(match_result, folder=None):
+def write_url_from_match_result(match_result: models.ImageMatch, folder: str = None) -> None:
     """Write url from match result."""
     netloc = urlparse(match_result.link).netloc
     sanitized_netloc = netloc.replace('.', '_')
@@ -260,12 +261,12 @@ def run_program_for_single_img(  # pylint: disable=too-many-branches, too-many-s
     return {'error': error_set, 'match result tag pairs': match_result_tag_pairs}
 
 
-def thumb(basename):
+def thumb(basename: str) -> Any:
     """Get thumbnail."""
     return send_from_directory(thumb_folder, basename)
 
 
-def create_app(script_info=None):
+def create_app(script_info: Optional[Any] = None) -> Any:
     """Create app."""
     app = Flask(__name__)
     # logging
@@ -308,7 +309,7 @@ def create_app(script_info=None):
     app.app_context().push()
 
     @app.shell_context_processor
-    def shell_context():  # pylint: disable=unused-variable
+    def shell_context() -> Dict['str', Any]:  # pylint: disable=unused-variable
         return {'app': app}
 
     # api
@@ -331,14 +332,15 @@ def create_app(script_info=None):
 class CustomFlaskGroup(flask_cli.FlaskGroup):
     """Custom Flask Group."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         """Class init."""
         super().__init__(**kwargs)
-        self.params[0].help = 'Show the program version'
+        if hasattr(self.params[0], 'help'):
+            self.params[0].help = 'Show the program version'  # type: ignore
         self.params[0].callback = get_custom_version
 
 
-def get_custom_version(ctx, _, value):
+def get_custom_version(ctx: Any, _: Any, value: Any) -> None:
     """Get version."""
     if not value or ctx.resilient_parsing:
         return
@@ -353,21 +355,21 @@ def get_custom_version(ctx, _, value):
 
 
 @click.group(cls=CustomFlaskGroup, create_app=create_app)
-def cli():
+def cli() -> None:
     """Run cli. This is a management script for application."""
 
 
 @cli.command()
 @click.version_option()
 @click.option(
-    '--place', type=click.Choice([x for x in iqdb_url_dict]),
+    '--place', type=click.Choice(iqdb_url_dict.keys()),
     default=DEFAULT_PLACE,
     help='Specify iqdb place, default:{}'.format(DEFAULT_PLACE)
 )
 @click.option(
     '--minimum-similarity', type=float, help='Minimum similarity.')
 @click.option('--resize', is_flag=True, help='Use resized image.')
-@click.option('--size', is_flag=True, help='Specify resized image.')
+@click.option('--size', help="Specify resized image, format: 'w,h'.")
 @click.option('--db-path', help='Specify Database path.')
 @click.option(
     '--match-filter', type=click.Choice(['default', 'best-match']),
@@ -385,12 +387,20 @@ def cli():
     '--abort-on-error', is_flag=True, help='Stop program when error occured')
 @click.argument('prog-input')
 def cli_run(
-    prog_input=None, resize=False, size=None,
-    db_path=None, place=DEFAULT_PLACE, match_filter='default',
-    input_mode='default', verbose=False, debug=False,
-    abort_on_error=False, write_tags=False, write_url=False,
-    minimum_similarity=None,
-):
+    prog_input: str = None,
+    resize: bool = False,
+    size: Optional[str] = None,
+    db_path: str = default_db_path,
+    place: str = DEFAULT_PLACE,
+    match_filter: str = 'default',
+    input_mode: str = 'default',
+    verbose: bool = False,
+    debug: bool = False,
+    abort_on_error: bool = False,
+    write_tags: bool = False,
+    write_url: bool = False,
+    minimum_similarity: bool = None,
+) -> None:
     """Get similar image from iqdb."""
     assert prog_input is not None, "Input is not a valid path"
 
@@ -411,6 +421,9 @@ def cli_run(
 
     # variable used in both input mode
     error_set = []
+    size_tuple: Optional[Tuple[int, int]] = None
+    if size is not None:
+        size_tuple = tuple(map(int, size.split(',', 1)))  # type: ignore
     if input_mode == 'folder':
         assert os.path.isdir(prog_input), 'Input is not valid folder'
         files = [os.path.join(prog_input, x) for x in os.listdir(prog_input)]
@@ -424,7 +437,7 @@ def cli_run(
             result = {}
             try:
                 result = run_program_for_single_img(
-                    ff, resize, size, place, match_filter,
+                    ff, resize, size_tuple, place, match_filter,
                     browser=br, scraper=scraper, disable_tag_print=True,
                     write_tags=write_tags, write_url=write_url,
                     minimum_similarity=minimum_similarity
@@ -438,7 +451,7 @@ def cli_run(
     else:
         image = prog_input
         result = run_program_for_single_img(
-            image, resize, size, place, match_filter,
+            image, resize, size_tuple, place, match_filter,
             browser=br, scraper=scraper,
             write_tags=write_tags, write_url=write_url,
             minimum_similarity=minimum_similarity
@@ -500,7 +513,9 @@ def get_hydrus_set(search_tags: List[str], client: Client) -> Iterator[Dict[str,
 @click.option('--access_key', help='Hydrus access key')
 @click.option('--hydrus_url', help='URL for hydrus client e.g. http://127.0.0.1:45869/')
 def search_hydrus_and_send_url(
-        tag: List[str], access_key: Optional[str] = None, hydrus_url: Optional[str] = 'http://127.0.0.1:45869/'):
+        tag: List[str],
+        access_key: Optional[str] = None,
+        hydrus_url: Optional[str] = 'http://127.0.0.1:45869/') -> None:
     """Search hydrus and send url."""
     # compatibility
     search_tags = tag
@@ -527,7 +542,7 @@ def search_hydrus_and_send_url(
 def search_hydrus_and_send_tag(
         tag: List[str], access_key: Optional[str] = None,
         hydrus_url: Optional[str] = 'http://127.0.0.1:45869/',
-        tag_repo: Optional[str] = 'local tags'):
+        tag_repo: Optional[str] = 'local tags') -> None:
     """Search hydrus and send tag."""
     # compatibility
     search_tags = tag

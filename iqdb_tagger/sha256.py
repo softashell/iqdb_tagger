@@ -5,7 +5,7 @@ import hashlib
 import sys
 
 
-def sha256_checksum(filename, block_size=65536):
+def sha256_checksum(filename: str, block_size: int = 65536) -> str:
     """Get sha256 checksum."""
     sha256 = hashlib.sha256()
     with open(filename, 'rb') as f:
@@ -14,7 +14,7 @@ def sha256_checksum(filename, block_size=65536):
     return sha256.hexdigest()
 
 
-def main():
+def main() -> None:
     """Run main func for module."""
     for f in sys.argv[1:]:
         checksum = sha256_checksum(f)

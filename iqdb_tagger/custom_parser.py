@@ -1,5 +1,5 @@
 """parser module."""
-from typing import Optional, List, Tuple
+from typing import Any, Iterator, List, Optional, Tuple
 
 import bs4
 import cfscrape
@@ -42,18 +42,18 @@ def get_tags(
 class CustomParser:
     """Base for custom parser."""
 
-    def __init__(self, url, page, scraper=None):
+    def __init__(self, url: str, page: Any, scraper: Optional[Any] = None) -> None:
         """Init method."""
         self.url = url
         self.page = page
         self.scraper = scraper
 
     @staticmethod
-    def is_url(url):
+    def is_url(url: str) -> bool:
         """Check url."""
         raise NotImplementedError
 
-    def get_tags(self) -> List[Tuple[str, str]]:
+    def get_tags(self) -> Iterator[Tuple[str, str]]:
         """Get tags."""
         raise NotImplementedError
 
@@ -62,13 +62,13 @@ class YandereParser(CustomParser):
     """Parser for yande.re."""
 
     @staticmethod
-    def is_url(url):
+    def is_url(url: str) -> bool:
         """Check url."""
         if 'yande.re/post/show/' in url:
             return True
         return False
 
-    def get_tags(self):
+    def get_tags(self) -> Iterator[Tuple[str, str]]:
         """Get tags."""
         page = self.page
         classname_to_namespace_dict = {
@@ -86,14 +86,14 @@ class ChanSankakuParser(CustomParser):
     """Parser for chan.sankakucomplex."""
 
     @staticmethod
-    def is_url(url):
+    def is_url(url: str) -> bool:
         """Check url."""
         if 'chan.sankakucomplex.com/post/show' in url:
             return True
         return False
 
     @staticmethod
-    def parse_page(page):
+    def parse_page(page: Any) -> Iterator[Tuple[str, str]]:
         """Parse page."""
         classname_to_namespace_dict = {
             'tag-type-artist': 'creator',
@@ -107,11 +107,11 @@ class ChanSankakuParser(CustomParser):
                 name = item.text.rsplit('(?)', 1)[0].strip()
                 yield (namespace, name)
 
-    def get_tags(self):
+    def get_tags(self) -> Iterator[Tuple[str, str]]:
         """Get tags."""
         page = self.page
         url = self.url
-        result = list(self.parse_page(page))
+        result = self.parse_page(page)
         if not result:
             h1_tag_text = page.select_one('h1').text
             if h1_tag_text != '503 Service Temporarily Unavailable':
@@ -120,7 +120,7 @@ class ChanSankakuParser(CustomParser):
                 self.scraper = cfscrape.CloudflareScraper()
             resp = self.scraper.get(url, timeout=10)
             html_soup = bs4.BeautifulSoup(resp.text, 'lxml')
-            return self.parse_page(html_soup)
+            result = self.parse_page(html_soup)
         return result
 
 
@@ -128,13 +128,13 @@ class GelbooruParser(CustomParser):
     """Parser for gelbooru.com."""
 
     @staticmethod
-    def is_url(url):
+    def is_url(url: str) -> bool:
         """Check url."""
         if 'gelbooru.com/index.php?' in url:
             return True
         return False
 
-    def get_tags(self):
+    def get_tags(self) -> Iterator[Tuple[str, str]]:
         """Get tags."""
         page_title = self.page.select_one('head title').text.strip()
         if page_title == 'Image List  | Gelbooru':
@@ -163,13 +163,13 @@ class ZerochanParser(CustomParser):
     """Parser for zerochan."""
 
     @staticmethod
-    def is_url(url):
+    def is_url(url: str) -> bool:
         """Check url."""
         if 'www.zerochan.net/' in url:
             return True
         return False
 
-    def get_tags(self):
+    def get_tags(self) -> Iterator[Tuple[str, str]]:
         """Get tags."""
         page = self.page
         tags = page.select('ul#tags li')
@@ -186,14 +186,14 @@ class DanbooruParser(CustomParser):
     """Parser for danbooru."""
 
     @staticmethod
-    def is_url(url):
+    def is_url(url: str) -> bool:
         """Check url."""
         if 'danbooru.donmai.us/posts/' in url:
 
             return True
         return False
 
-    def get_tags(self):
+    def get_tags(self) -> Iterator[Tuple[str, str]]:
         """Get tags."""
         page = self.page
         classname_to_namespace_dict = {
@@ -216,13 +216,13 @@ class Eshuushuu(CustomParser):
     """Parser for e-shuushuu.net."""
 
     @staticmethod
-    def is_url(url):
+    def is_url(url: str) -> bool:
         """Check url."""
         if 'e-shuushuu.net/image/' in url:
             return True
         return False
 
-    def get_tags(self):
+    def get_tags(self) -> Iterator[Tuple[str, str]]:
         """Get tags."""
         page = self.page
         classname_to_namespace_dict = {
@@ -242,13 +242,13 @@ class Konachan(CustomParser):
     """Parser for konachan.com."""
 
     @staticmethod
-    def is_url(url):
+    def is_url(url: str) -> bool:
         """Check url."""
         if 'konachan.com/post/show/' in url:
             return True
         return False
 
-    def get_tags(self):
+    def get_tags(self) -> Iterator[Tuple[str, str]]:
         """Get tags."""
         page = self.page
         classname_to_namespace_dict = {
@@ -270,13 +270,13 @@ class E621Parser(CustomParser):
     """Parser for e621."""
 
     @staticmethod
-    def is_url(url):
+    def is_url(url: str) -> bool:
         """Check url."""
         if 'e621.net/post/show/' in url:
             return True
         return False
 
-    def get_tags(self):
+    def get_tags(self) -> Iterator[Tuple[str, str]]:
         """Get tags."""
         classname_to_namespace_dict = {
             'tag-type-artist': 'creator',

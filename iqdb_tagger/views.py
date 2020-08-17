@@ -1,30 +1,31 @@
 """views module."""
 from tempfile import NamedTemporaryFile
+from typing import Any
 from urllib.parse import urlparse
 
-from flask import request, redirect, url_for, current_app, flash, abort
-from flask_admin import AdminIndexView, expose, BaseView
+import requests
+from flask import abort, current_app, flash, redirect, request, url_for
+from flask_admin import AdminIndexView, BaseView, expose
 from flask_paginate import Pagination, get_page_parameter
 from flask_restful import Resource
-import requests
 
+from . import forms, models
 from .models import (
-    get_posted_image,
     ImageMatch,
     ImageMatchRelationship,
     ImageModel,
-    iqdb_url_dict,
     get_page_result,
+    get_posted_image,
     get_tags_from_match_result,
+    iqdb_url_dict
 )
-from . import forms, models
 
 
 class HomeView(AdminIndexView):
     """Home view."""
 
     @expose('/', methods=('GET', 'POST'))
-    def index(self):
+    def index(self) -> Any:
         """Get index page."""
         form = forms.ImageUploadForm()
         if form.file.data:
@@ -77,19 +78,19 @@ class MatchView(BaseView):
     """Match view."""
 
     @expose('/')
-    def index(self):
+    def index(self) -> Any:
         """Index page."""
         return self.render('iqdb_tagger/match.html')
 
     @expose('/sha256-<checksum>')
-    def match_sha256(self, checksum):
+    def match_sha256(self, checksum: str) -> Any:
         """Get image match the checksum."""
         current_app.logger.debug('match sha256: {}'.format(request.url))
         entry = models.ImageModel.get(models.ImageModel.checksum == checksum)
         return self.render('iqdb_tagger/match_checksum.html', entry=entry)
 
     @expose('/d/<pair_id>')
-    def match_detail(self, pair_id):
+    def match_detail(self, pair_id: str) -> Any:
         """Show single match pair."""
         nocache = False
         entry = ImageMatchRelationship.get(ImageMatchRelationship.id == pair_id)
@@ -116,7 +117,7 @@ class MatchView(BaseView):
 class MatchViewList(Resource):
     """Resource api for MatchViewList."""
 
-    def post(self):  # pylint: disable=R0201
+    def post(self) -> Any:  # pylint: disable=R0201
         """Post method for MatchViewList."""
         f = request.files['file']
         resize = True
@@ -136,6 +137,6 @@ class MatchViewList(Resource):
                 except requests.exceptions.ConnectionError as e:
                     current_app.logger.error(str(e))
                     abort(400, 'Connection error.')
-                image_match = list(models.ImageMatch.get_or_create_from_page(  # NOQA
+                list(models.ImageMatch.get_or_create_from_page(  # NOQA
                     page=result_page, image=posted_img, place=im_place))
         raise NotImplementedError

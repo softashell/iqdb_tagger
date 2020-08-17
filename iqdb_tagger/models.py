@@ -5,8 +5,8 @@ import datetime
 import logging
 import os
 from difflib import Differ
+from typing import Any, Dict, Iterator, List, Optional, Tuple, TypeVar
 from urllib.parse import urljoin, urlparse
-from typing import Any, Dict, List, Optional, Tuple, TypeVar
 
 import cfscrape
 import mechanicalsoup
@@ -27,8 +27,8 @@ from PIL import Image
 
 from .custom_parser import get_tags as get_tags_from_parser
 from .sha256 import sha256_checksum
-from .utils import default_db_path, thumb_folder as default_thumb_folder
-
+from .utils import default_db_path
+from .utils import thumb_folder as default_thumb_folder
 
 DEFAULT_SIZE = 150, 150
 db = SqliteDatabase(None)
@@ -57,7 +57,7 @@ class Tag(BaseModel):
     namespace = CharField(null=True)
 
     @property
-    def full_name(self):
+    def full_name(self) -> str:
         """Get full name."""
         if self.namespace:
             return self.namespace + ':' + self.name
@@ -86,23 +86,24 @@ class Match(BaseModel):
     height = IntegerField(null=True)
 
     @property
-    def iqdb_thumb(self):
+    def iqdb_thumb(self) -> str:
         """Get iqdb thumb url."""
         return urljoin('https://iqdb.org', self.thumb)
 
     @property
-    def size(self):
+    def size(self) -> Optional[str]:
         """Get size string."""
         if self.width and self.height:
             return '{}x{}'.format(self.width, self.height)
+        return None
 
     @property
-    def link(self):
+    def link(self) -> str:
         """Get href link."""
         return urljoin('https://', self.href)
 
     @property
-    def link_netloc(self):
+    def link_netloc(self) -> str:
         """Get readable netloc."""
         netloc = urlparse(self.link).netloc
         if netloc.startswith('www.'):
@@ -114,7 +115,7 @@ class Match(BaseModel):
         return netloc
 
     @property
-    def tags_from_img_alt(self):
+    def tags_from_img_alt(self) -> List[Any]:
         """Get readable tag from image alt."""
         result = []
         img_alt = self.img_alt[0]
@@ -147,12 +148,12 @@ class ImageModel(BaseModel):
     path = CharField(null=True)
 
     @property
-    def size(self):
+    def size(self) -> str:
         """Get size string."""
         return '{}x{}'.format(self.width, self.height)
 
     @property
-    def path_basename(self):
+    def path_basename(self) -> str:
         """Get path basename."""
         return os.path.basename(self.path)
 
@@ -169,7 +170,7 @@ class ImageModel(BaseModel):
         )
         return img, created
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Get string repr."""
         return '{}, checksum:{}..., size:{}x{} path:{}'.format(
             super().__str__(), self.checksum[:5],
@@ -229,15 +230,15 @@ class ImageMatch(BaseModel):
     force_gray = BooleanField(default=False)
 
     @staticmethod
-    def parse_table(table):
+    def parse_table(table: Any) -> Dict[str, Any]:
         """Parse table."""
         header_tag = table.select_one('th')
-        status = ImageMatch.STATUS_OTHER
+        status: int = ImageMatch.STATUS_OTHER
         if hasattr(header_tag, 'text'):
             header_text = header_tag.text
             best_match_text = ('Best match', 'Additional match', 'Probable match:')
             if header_text in ('Your image', 'No relevant matches'):
-                status = None
+                status = -1
             elif header_text == 'Possible match':
                 status = ImageMatch.STATUS_POSSIBLE_MATCH
             elif header_text in best_match_text:
@@ -246,7 +247,7 @@ class ImageMatch(BaseModel):
                 status = ImageMatch.STATUS_OTHER
             else:
                 log.debug('header text', v=header_text)
-        if status is None:
+        if status == -1:
             return {}
         td_tags = table.select('td')
         assert '% similarity' in td_tags[-1].text, "similarity was not found in " + header_tag.text
@@ -286,7 +287,7 @@ class ImageMatch(BaseModel):
         }
 
     @staticmethod
-    def parse_page(page):
+    def parse_page(page: Any) -> Iterator[Dict[str, Any]]:
         """Parse page."""
         if isinstance(page, str):
             page = BeautifulSoup(page, 'lxml')
@@ -308,7 +309,11 @@ class ImageMatch(BaseModel):
             yield res
 
     @staticmethod
-    def get_or_create_from_page(page, image, place=None, force_gray=False):
+    def get_or_create_from_page(
+            page: Any,
+            image: Any,
+            place: int = None,
+            force_gray: bool = False) -> Iterator['ImageMatch']:
         """Get or create from page result."""
         if place is None:
             place = ImageMatch.SP_IQDB
@@ -338,12 +343,12 @@ class ImageMatch(BaseModel):
             )
 
     @property
-    def status_verbose(self):
+    def status_verbose(self) -> str:
         """Get verbose status."""
         return dict(ImageMatch.STATUS_CHOICES)[self.status]
 
     @property
-    def search_place_verbose(self):
+    def search_place_verbose(self) -> str:
         """Get verbose search place."""
         return dict(ImageMatch.SP_CHOICES)[self.search_place]
 
@@ -382,8 +387,12 @@ class ThumbnailRelationship(BaseModel):
 
     @staticmethod
     def get_or_create_from_image(
-            image: ImageModel, size: Tuple[int, int],
-            thumb_folder: str = None, thumb_path: str = None, img_path: str = None):
+            image: ImageModel,
+            size: Tuple[int, int],
+            thumb_folder: Optional[str] = None,
+            thumb_path: Optional[str] = None,
+            img_path: str = None
+    ) -> Tuple['ThumbnailRelationship', bool]:
         """Get or create from image."""
         thumbnails = [
             x for x in image.thumbnails
@@ -419,7 +428,7 @@ class ThumbnailRelationship(BaseModel):
             original=image, thumbnail=thumb)
 
 
-def init_db(db_path=None, version=1):
+def init_db(db_path: Optional[str] = None, version: int = 1) -> None:
     """Init db."""
     if db_path is None:
         db_path = default_db_path
@@ -481,7 +490,7 @@ def get_page_result(
         image: str,
         url: str,
         browser: Optional[mechanicalsoup.StatefulBrowser] = None,
-        use_requests: Optional[bool] = False):
+        use_requests: Optional[bool] = False) -> str:
     """Get iqdb page result.
 
     Args:
