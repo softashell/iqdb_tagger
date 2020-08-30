@@ -53,10 +53,11 @@ setup(
         'click>=7.0',
         'Flask-Admin>=1.5.2',
         'flask-paginate>=0.5.1',
-        'Flask-RESTful==0.3.8',
+        'Flask-RESTful>=0.3.8',
         'Flask-WTF>=0.14.2',
         'Flask>=1.0.2',
         'funclog>=0.3.0',
+        'hydrus-api>=2.12.0',
         'lxml>=3.8.0',
         'MechanicalSoup>=0.7.0',
         'peewee>=2.10.1',
@@ -83,7 +84,6 @@ setup(
             'pytest>=3.1.2',
             'vcrpy>=1.11.1',
         ],
-        'hydrus': hydrus_pkg
     },
     entry_points={
         'console_scripts': [
