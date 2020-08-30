@@ -43,7 +43,6 @@ setup(
     packages=find_packages(exclude=['docs', 'tests*']),
     include_package_data=True,
     author='softashell',
-    author_email='foreturiga@gmail.com',
     maintainer='Rachmadani Haryono',
     maintainer_email='foreturiga@gmail.com',
     install_requires=[
