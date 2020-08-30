@@ -492,7 +492,12 @@ def get_hydrus_set(search_tags: List[str], client: Client) -> Iterator[Dict[str,
         f_content = cl.get_file(file_id=f_id)
         init_program()
         with NamedTemporaryFile(delete=False) as f:
-            f.write(f_content)
+            try:
+                f.write(f_content)
+            except Exception as err:
+                if str(err) != "a bytes-like object is required, not 'Response'":
+                    log.error(str(err))
+                f.write(f_content.content)
             try:
                 res_set = run_program_for_single_img(
                     f.name, resize=True, place='iqdb',
@@ -560,7 +565,7 @@ def search_hydrus_and_send_tag(
         tags = list(set(sum(tag_sets, [])))
         full_name_tags = [x.full_name for x in tags]
         if full_name_tags:
-            cl.add_tags([f_hash], services_to_tags={tag_repo: full_name_tags})
+            cl.add_tags([f_hash], service_to_tags={tag_repo: full_name_tags})
 
 
 if __name__ == '__main__':
