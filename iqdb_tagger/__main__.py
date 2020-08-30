@@ -494,9 +494,7 @@ def get_hydrus_set(search_tags: List[str], client: Client) -> Iterator[Dict[str,
         with NamedTemporaryFile(delete=False) as f:
             try:
                 f.write(f_content)
-            except Exception as err:
-                if str(err) != "a bytes-like object is required, not 'Response'":
-                    log.error(str(err))
+            except TypeError:
                 f.write(f_content.content)
             try:
                 res_set = run_program_for_single_img(
