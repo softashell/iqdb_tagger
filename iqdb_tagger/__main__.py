@@ -8,9 +8,9 @@ import platform
 import pprint
 import shutil
 import sys
+import traceback
 from logging.handlers import TimedRotatingFileHandler
 from tempfile import NamedTemporaryFile
-from typing import Any, Dict, Iterator, List, Optional, Tuple  # NOQA; pylint: disable=unused-import
 from urllib.parse import urlparse
 
 import cfscrape
@@ -30,6 +30,8 @@ from . import models, views
 from .__init__ import __version__, db_version
 from .models import iqdb_url_dict
 from .utils import default_db_path, thumb_folder, user_data_dir
+
+from typing import Any, Dict, Iterator, List, Optional, Tuple  # NOQA; pylint: disable=unused-import
 
 
 try:
@@ -563,7 +565,10 @@ def search_hydrus_and_send_tag(
         tags = list(set(sum(tag_sets, [])))
         full_name_tags = [x.full_name for x in tags]
         if full_name_tags:
-            cl.add_tags([f_hash], service_to_tags={tag_repo: full_name_tags})
+            try:
+                cl.add_tags([f_hash], service_to_tags={tag_repo: full_name_tags})
+            except Exception:  # pylint: disable=broad-except
+                traceback.print_exc()
 
 
 if __name__ == '__main__':
