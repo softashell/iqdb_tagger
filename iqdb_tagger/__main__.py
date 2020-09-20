@@ -465,7 +465,11 @@ def cli_run(
             log.error('path: ' + x[0] + '\nerror: ' + str(x[1]))
 
 
-def get_hydrus_set(search_tags: List[str], client: Client) -> Iterator[Dict[str, Any]]:
+def get_hydrus_set(
+        search_tags: List[str],
+        client: Client,
+        resize: bool = True
+) -> Iterator[Dict[str, Any]]:
     """Get hydrus result.
 
     Args:
@@ -498,7 +502,7 @@ def get_hydrus_set(search_tags: List[str], client: Client) -> Iterator[Dict[str,
                 f.write(f_content.content)
             try:
                 res_set = run_program_for_single_img(
-                    f.name, resize=True, place='iqdb',
+                    f.name, resize=resize, place='iqdb',
                     match_filter='best-match',
                     disable_tag_print=True
                 )
@@ -515,10 +519,13 @@ def get_hydrus_set(search_tags: List[str], client: Client) -> Iterator[Dict[str,
 @click.argument('tag', nargs=-1)
 @click.option('--access_key', help='Hydrus access key')
 @click.option('--hydrus_url', help='URL for hydrus client e.g. http://127.0.0.1:45869/')
+@click.option('--no-resize', help="Don't resize image when upload", is_flag=True)
 def search_hydrus_and_send_url(
         tag: List[str],
         access_key: Optional[str] = None,
-        hydrus_url: Optional[str] = 'http://127.0.0.1:45869/') -> None:
+        hydrus_url: Optional[str] = 'http://127.0.0.1:45869/',
+        no_resize: bool = False
+) -> None:
     """Search hydrus and send url."""
     # compatibility
     search_tags = tag
@@ -530,7 +537,7 @@ def search_hydrus_and_send_url(
     if hydrus_url:
         args.append(hydrus_url)
     cl = Client(*args)
-    for res_dict in get_hydrus_set(search_tags, cl):
+    for res_dict in get_hydrus_set(search_tags, cl, resize=not no_resize):
         match_results = [x[0] for x in res_dict['iqdb_result']['match result tag pairs']]
         if match_results:
             for item in match_results:
@@ -542,10 +549,13 @@ def search_hydrus_and_send_url(
 @click.option('--access_key', help='Hydrus access key')
 @click.option('--hydrus_url', help='URL for hydrus client e.g. http://127.0.0.1:45869/')
 @click.option('--tag_repo', help='tag repo name e.g. local tags', default='local tags')
+@click.option('--no-resize', help="Don't resize image when upload", is_flag=True)
 def search_hydrus_and_send_tag(
         tag: List[str], access_key: Optional[str] = None,
         hydrus_url: Optional[str] = 'http://127.0.0.1:45869/',
-        tag_repo: Optional[str] = 'local tags') -> None:
+        tag_repo: Optional[str] = 'local tags',
+        no_resize: bool = False
+) -> None:
     """Search hydrus and send tag."""
     # compatibility
     search_tags = tag
@@ -557,7 +567,7 @@ def search_hydrus_and_send_tag(
     if hydrus_url:
         args.append(hydrus_url)
     cl = Client(*args)
-    for res_dict in get_hydrus_set(search_tags, cl):
+    for res_dict in get_hydrus_set(search_tags, cl, resize=not no_resize):
         f_hash = res_dict['metadata']['hash']
         tag_sets = [x[1] for x in res_dict['iqdb_result']['match result tag pairs']]
         tags = list(set(sum(tag_sets, [])))
