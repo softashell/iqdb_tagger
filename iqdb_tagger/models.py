@@ -418,7 +418,7 @@ class ThumbnailRelationship(BaseModel):
                 ]
                 err_str = str(e)
                 if err_str in valid_err:
-                    log.debug('Converting to JPEG for error fix', err=err_str)
+                    #  log.debug('Converting to JPEG for error fix', err=err_str)
                     im = im.convert('RGB')
                     im.save(thumb_path, 'JPEG')
                 else:
