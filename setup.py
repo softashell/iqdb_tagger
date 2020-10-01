@@ -1,9 +1,10 @@
 """setup file."""
-from os import environ, path
+from os import path
 from typing import Dict  # NOQA
 
 from distutils.util import convert_path  # NOQA; pylint: disable=import-error,E0611
 from setuptools import find_packages, setup
+
 
 # get version from package
 #  https://stackoverflow.com/a/24517154/1766261
@@ -18,11 +19,6 @@ here = path.abspath(path.dirname(__file__))
 # Get the long description from the README file
 with open(path.join(here, 'README.rst')) as f:
     long_description = f.read()
-
-
-hydrus_pkg =  \
-    ['hydrus @ https://gitlab.com/cryzed/hydrus-api/-/archive/master/hydrus-api-master.zip'] \
-    if 'TRAVIS' not in environ else []
 
 
 setup(
@@ -56,7 +52,7 @@ setup(
         'Flask-WTF>=0.14.2',
         'Flask>=1.0.2',
         'funclog>=0.3.0',
-        'hydrus-api>=2.12.0',
+        'hydrus-api>=2.14.2',
         'lxml>=3.8.0',
         'MechanicalSoup>=0.7.0',
         'peewee>=2.10.1',

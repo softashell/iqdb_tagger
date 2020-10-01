@@ -493,7 +493,7 @@ def get_hydrus_set(
     for idx, metadata in enumerate(metadata_sets):
         f_id, f_hash = metadata['file_id'], metadata['hash']
         log.info('Metadata', idx=idx, total=len(metadata_sets), id=f_id, hash=f_hash)
-        f_content = cl.get_file(file_id=f_id)
+        f_content = cl.get_file(file_id=f_id).content
         init_program()
         with NamedTemporaryFile(delete=False) as f:
             try:
