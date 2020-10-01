@@ -29,8 +29,9 @@ setup(
     url='https://github.com/softashell/iqdb_tagger',
     download_url='https://github.com/softashell/iqdb_tagger'
     '/tarball/' + __version__,
-    license='BSD',
+    license='MIT',
     classifiers=[
+        "License :: OSI Approved :: MIT License",
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'Programming Language :: Python :: 3',
