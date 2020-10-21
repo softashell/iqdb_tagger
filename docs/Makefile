@@ -49,6 +49,15 @@ help:
 	@echo "  coverage   to run coverage check of the documentation (if enabled)"
 	@echo "  dummy      to check syntax errors of document sources"
 	@echo "  livehtml   to run sphinx-autobuild"
+	@echo "  test   		to run pytest"
+	@echo "  livetest   to run pytest-watch"
+
+.PHONY: livetest
+livetest:
+	ptw --runner "pytest --flake8 --mypy --cov=iqdb_tagger --cov-report html --cov iqdb_tagger .. -vv"
+.PHONY: test
+test:
+	pytest --flake8 --mypy --cov=iqdb_tagger --cov-report html --cov iqdb_tagger .. -vv
 
 .PHONY: livehtml
 livehtml:
