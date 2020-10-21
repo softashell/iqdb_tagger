@@ -53,7 +53,6 @@ help:
 .PHONY: livehtml
 livehtml:
 	sphinx-autobuild -q \
-		-p 0 \
 		--open-browser \
 		--delay 5 \
 		--ignore "*.swp" \
