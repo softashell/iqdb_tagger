@@ -26,17 +26,13 @@ from flask import cli as flask_cli
 from flask import send_from_directory
 from flask_admin import Admin
 from flask_restful import Api
+from hydrus import Client
+from hydrus.utils import yield_chunks
 
-from . import models, views
+from . import models, views, parse
 from .__init__ import __version__, db_version
 from .models import iqdb_url_dict
 from .utils import default_db_path, thumb_folder, user_data_dir
-
-try:
-    from hydrus import Client
-    from hydrus.utils import yield_chunks
-except ImportError:
-    Client = None
 
 
 db = '~/images/! tagged'
@@ -47,36 +43,12 @@ forcegray = False
 log = structlog.getLogger()
 
 
-def get_iqdb_result(image: str, iqdb_url: str) -> Any:
+def get_iqdb_result(image: str, iqdb_url: str = 'http://iqdb.org/') -> Any:
     """Get iqdb result."""
-    e621_iqdb_url = 'http://iqdb.harry.lu'
-    use_requests = iqdb_url != e621_iqdb_url
-    if use_requests:
-        files = {'file': open(image, 'rb')}
-        resp = requests.post(iqdb_url, files=files, timeout=10)
-        html_text = BeautifulSoup(resp.text, 'lxml')
-    else:
-        browser = mechanicalsoup.StatefulBrowser(soup_config={'features': 'lxml'})
-        browser.raise_on_404 = True
-        browser.open(iqdb_url)
-        html_form = browser.select_form('form')
-        html_form.input({'file': image})
-        browser.submit_selected()
-        html_text = browser.get_current_page()
-    return parse_iqdb_result_page(html_text)
-
-
-def parse_iqdb_result_page(page: Any) -> Iterator[Any]:
-    """Parse iqdb result page."""
-    tables = page.select('.pages table')
-    for table in tables:
-        res = models.ImageMatch.parse_table(table)
-        if not res:
-            continue
-        additional_res = models.get_additional_result_from_table(table, res)
-        if additional_res:
-            yield additional_res
-        yield res
+    files = {'file': open(image, 'rb')}
+    resp = requests.post(iqdb_url, files=files, timeout=10)
+    html_text = BeautifulSoup(resp.text, 'lxml')
+    return parse.parse_result(html_text)
 
 
 def init_program(db_path: str = default_db_path) -> None:
@@ -129,7 +101,7 @@ def get_result_on_windows(
         post_img = models.get_posted_image(
             img_path=temp_f.name, resize=resize, size=size, thumb_path=thumb_temp_f.name)
     except OSError as e:
-        raise OSError(str(e) + ' when processing {}'.format(image))
+        raise OSError(str(e) + ' when processing {}'.format(image)) from e
     # append data to result
     for img_m_rel_set in post_img.imagematchrelationship_set:
         for item_set in img_m_rel_set.imagematch_set:
@@ -204,7 +176,7 @@ def run_program_for_single_img(  # pylint: disable=too-many-branches, too-many-s
                 post_img = models.get_posted_image(
                     img_path=temp.name, resize=resize, size=size, thumb_path=thumb_temp.name)
             except OSError as e:
-                raise OSError(str(e) + ' when processing {}'.format(image))
+                raise OSError(str(e) + ' when processing {}'.format(image)) from e
 
             for img_m_rel_set in post_img.imagematchrelationship_set:
                 for item_set in img_m_rel_set.imagematch_set:
