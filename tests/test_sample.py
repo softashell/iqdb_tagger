@@ -3,4 +3,4 @@
 
 def test_pass():
     """Test func."""
-    assert True, 'dummy sample test'
+    assert True, "dummy sample test"
