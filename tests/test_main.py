@@ -12,7 +12,7 @@ from click.testing import CliRunner
 from PIL import Image
 
 import iqdb_tagger
-from iqdb_tagger import __main__ as main
+from iqdb_tagger import __main__ as main, parse
 from iqdb_tagger.__main__ import cli_run, init_program
 from iqdb_tagger.models import ImageModel, ThumbnailRelationship, get_posted_image
 
@@ -91,7 +91,9 @@ def test_main(tmpdir, tmp_img):  # pylint:disable=redefined-outer-name
             img_path.strpath,
         ],
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, \
+        '{}: {}'.format(
+            type(result.exception.__classs__.__name__), result.exception)
 
 
 @vcr.use_cassette(get_casette_path("main1"), record_mode="new_episodes")
@@ -110,7 +112,6 @@ def test_get_iqdb_result(tmp_img):
 
 def test_parse_iqdb_result_page():
     """test iqdb page parsing result."""
-
     with open(str(Path(__file__).parent / "file" / "main1.html")) as f:
         soup = BeautifulSoup(f.read(), "lxml")
     with open(str(Path(__file__).parent / "file" / "main1.json")) as f:
@@ -121,5 +122,5 @@ def test_parse_iqdb_result_page():
         x["size"] = tuple(x["size"])
         temp_list.append(x)
     json_res = temp_list
-    res = list(main.parse_iqdb_result_page(soup))
+    res = list(parse.parse_result(soup))
     assert res == json_res
