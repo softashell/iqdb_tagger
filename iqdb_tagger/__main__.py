@@ -125,7 +125,7 @@ def get_result_on_windows(
         )
         # if ok, will output: <Response [200]>
         result = list(
-            models.ImageMatch.get_or_create_from_page(
+            parse.get_or_create_image_match_from_page(
                 page=page, image=post_img, place=im_place
             )
         )
