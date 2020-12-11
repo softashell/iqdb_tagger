@@ -29,8 +29,7 @@ def test_get_or_create_from_path(tmpdir):
     assert img.width, img.height == size
     assert img.path == img_path
     assert (
-        img.checksum
-        == "2a951983fcb673f586c698e4ff8c15d930dcc997f897e42aef77a09099673025"
+        img.checksum == "2a951983fcb673f586c698e4ff8c15d930dcc997f897e42aef77a09099673025"
     )
 
 

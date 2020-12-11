@@ -4,7 +4,6 @@ import json
 import logging
 import os
 from pathlib import Path
-from unittest import mock
 
 import pytest
 import vcr
@@ -96,7 +95,7 @@ def test_main(tmpdir, tmp_img):  # pylint:disable=redefined-outer-name
 
 
 @vcr.use_cassette(get_casette_path("main1"), record_mode="new_episodes")
-def test_get_iqdb_result(tmp_img, monkeypatch):
+def test_get_iqdb_result(tmp_img):
     """Test get_iqdb_result."""
     with open(str(Path(__file__).parent / "file" / "main1.json")) as f:
         json_res = json.load(f)
@@ -110,6 +109,7 @@ def test_get_iqdb_result(tmp_img, monkeypatch):
 
 
 def test_parse_iqdb_result_page():
+    """test iqdb page parsing result."""
 
     with open(str(Path(__file__).parent / "file" / "main1.html")) as f:
         soup = BeautifulSoup(f.read(), "lxml")
