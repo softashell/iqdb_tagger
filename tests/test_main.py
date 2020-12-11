@@ -91,9 +91,9 @@ def test_main(tmpdir, tmp_img):  # pylint:disable=redefined-outer-name
             img_path.strpath,
         ],
     )
-    assert result.exit_code == 0, \
-        '{}: {}'.format(
-            type(result.exception.__classs__.__name__), result.exception)
+    if result.exit_code != 0 and result.exception:
+        raise result.exception
+    assert result.exit_code == 0
 
 
 @vcr.use_cassette(get_casette_path("main1"), record_mode="new_episodes")
