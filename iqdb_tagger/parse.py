@@ -7,7 +7,7 @@ from typing import Any, Dict, Iterator
 import structlog
 from bs4 import BeautifulSoup, element
 
-from .models import ImageMatch, Match
+from .models import ImageMatch, Match, ImageMatchRelationship
 
 log = structlog.getLogger()
 
@@ -93,3 +93,37 @@ def get_additional_result(
         additional_res = last_result
         additional_res["href"] = a_tags[1].attrs.get("href", None)
     return additional_res
+
+
+def get_or_create_image_match_from_page(
+    page: BeautifulSoup,
+    image: Any,
+    place: int = ImageMatch.SP_IQDB,
+    force_gray: bool = False
+) -> Iterator["ImageMatch"]:
+    """Get or create from page result."""
+    items = parse_result(page)
+    for item in items:
+        match_result, _ = Match.get_or_create(
+            href=item["href"],
+            defaults={
+                "thumb": item["thumb"],
+                "rating": item["rating"],
+                "img_alt": item["img_alt"],
+                "width": item["size"][0],
+                "height": item["size"][1],
+            },
+        )
+        imr, _ = ImageMatchRelationship.get_or_create(
+            image=image,
+            match_result=match_result,
+        )
+        yield ImageMatch.get_or_create(
+            match=imr,
+            search_place=place,
+            force_gray=force_gray,
+            defaults={
+                "status": item["status"],
+                "similarity": item["similarity"],
+            },
+        )

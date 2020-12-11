@@ -229,39 +229,6 @@ class ImageMatch(BaseModel):
     created_date = DateTimeField(default=datetime.datetime.now)
     force_gray = BooleanField(default=False)
 
-    @staticmethod
-    def get_or_create_from_page(
-        page: Any, image: Any, place: int = None, force_gray: bool = False
-    ) -> Iterator["ImageMatch"]:
-        """Get or create from page result."""
-        if place is None:
-            place = ImageMatch.SP_IQDB
-        items = ImageMatch.parse_page(page)
-        for item in items:
-            match_result, _ = Match.get_or_create(
-                href=item["href"],
-                defaults={
-                    "thumb": item["thumb"],
-                    "rating": item["rating"],
-                    "img_alt": item["img_alt"],
-                    "width": item["size"][0],
-                    "height": item["size"][1],
-                },
-            )
-            imr, _ = ImageMatchRelationship.get_or_create(
-                image=image,
-                match_result=match_result,
-            )
-            yield ImageMatch.get_or_create(
-                match=imr,
-                search_place=place,
-                force_gray=force_gray,
-                defaults={
-                    "status": item["status"],
-                    "similarity": item["similarity"],
-                },
-            )
-
     @property
     def status_verbose(self) -> str:
         """Get verbose status."""
