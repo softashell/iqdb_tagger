@@ -4,7 +4,7 @@
 import datetime
 import logging
 import os
-from typing import Any, Iterator, List, Optional, Tuple, TypeVar
+from typing import Any, List, Optional, Tuple, TypeVar
 from urllib.parse import urljoin, urlparse
 
 import cfscrape

@@ -111,7 +111,7 @@ def test_get_iqdb_result(tmp_img):
 
 
 def test_parse_iqdb_result_page():
-    """test iqdb page parsing result."""
+    """Test iqdb page parsing result."""
     with open(str(Path(__file__).parent / "file" / "main1.html")) as f:
         soup = BeautifulSoup(f.read(), "lxml")
     with open(str(Path(__file__).parent / "file" / "main1.json")) as f:
