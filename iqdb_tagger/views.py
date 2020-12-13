@@ -9,7 +9,7 @@ from flask_admin import AdminIndexView, BaseView, expose
 from flask_paginate import Pagination, get_page_parameter
 from flask_restful import Resource
 
-from . import forms, models
+from . import forms, models, parse
 from .models import (
     ImageMatch,
     ImageMatchRelationship,
@@ -59,7 +59,7 @@ class HomeView(AdminIndexView):
                         flash("Connection error.")
                         return redirect(request.url)
                     list(
-                        ImageMatch.get_or_create_from_page(
+                        parse.get_or_create_image_match_from_page(
                             page=result_page, image=posted_img, place=im_place
                         )
                     )
@@ -164,7 +164,7 @@ class MatchViewList(Resource):
                     current_app.logger.error(str(e))
                     abort(400, "Connection error.")
                 list(
-                    models.ImageMatch.get_or_create_from_page(  # NOQA
+                    parse.get_or_create_image_match_from_page(  # NOQA
                         page=result_page, image=posted_img, place=im_place
                     )
                 )
