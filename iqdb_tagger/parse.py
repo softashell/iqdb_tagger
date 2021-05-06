@@ -45,9 +45,7 @@ def parse_table(table: element.Tag) -> Dict[str, Any]:
     if status == -1:
         return {}
     td_tags = table.select("td")
-    assert "% similarity" in td_tags[-1].text, (
-        "similarity was not found in " + header_tag.text
-    )
+    assert "% similarity" in td_tags[-1].text, "similarity was not found in " + header_tag.text
     size_and_rating_text = td_tags[-2].text
     rating = Match.RATING_UNKNOWN
     for item in Match.RATING_CHOICES:
@@ -66,9 +64,7 @@ def parse_table(table: element.Tag) -> Dict[str, Any]:
     if img_alt != img_title:
         d = Differ()
         diff_text = "\n".join(d.compare(img_alt, img_title))
-        log.warning(
-            "title and alt attribute of img tag is different.\n{}".format(diff_text)
-        )
+        log.warning("title and alt attribute of img tag is different.\n{}".format(diff_text))
     return {
         # match
         "status": status,
@@ -82,9 +78,7 @@ def parse_table(table: element.Tag) -> Dict[str, Any]:
     }
 
 
-def get_additional_result(
-    table: element.Tag, last_result: Dict[str, Any]
-) -> Dict[str, Any]:
+def get_additional_result(table: element.Tag, last_result: Dict[str, Any]) -> Dict[str, Any]:
     """Get additional result from html table."""
     a_tags = table.select("a")
     assert len(a_tags) < 3, "Unexpected html received at parse_page. Malformed link"
@@ -99,7 +93,7 @@ def get_or_create_image_match_from_page(
     page: BeautifulSoup,
     image: Any,
     place: int = ImageMatch.SP_IQDB,
-    force_gray: bool = False
+    force_gray: bool = False,
 ) -> Iterator["ImageMatch"]:
     """Get or create from page result."""
     items = parse_result(page)

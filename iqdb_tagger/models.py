@@ -173,9 +173,7 @@ class ImageModel(BaseModel):
 
     def __str__(self) -> str:
         """Get string repr."""
-        return "{}, checksum:{}..., size:{}x{} path:{}".format(
-            super().__str__(), self.checksum[:5], self.width, self.height, self.path
-        )
+        return "{}, checksum:{}..., size:{}x{} path:{}".format(super().__str__(), self.checksum[:5], self.width, self.height, self.path)
 
 
 class ImageMatchRelationship(BaseModel):
@@ -273,11 +271,7 @@ class ThumbnailRelationship(BaseModel):
         img_path: str = None,
     ) -> Tuple["ThumbnailRelationship", bool]:
         """Get or create from image."""
-        thumbnails = [
-            x
-            for x in image.thumbnails
-            if x.thumbnail.width == size[0] and x.thumbnail.height == size[1]
-        ]
+        thumbnails = [x for x in image.thumbnails if x.thumbnail.width == size[0] and x.thumbnail.height == size[1]]
         if thumbnails:
             assert len(thumbnails) == 1, "There was not one thumbnail for the result"
             return thumbnails[0], False
@@ -400,9 +394,7 @@ def get_tags_from_match_result(
 ) -> List[Tag]:
     """Get tags from match result."""
     filtered_hosts = ["anime-pictures.net", "www.theanimegallery.com"]
-    res = MatchTagRelationship.select().where(
-        MatchTagRelationship.match == match_result
-    )
+    res = MatchTagRelationship.select().where(MatchTagRelationship.match == match_result)
     tags = [x.tag for x in res]
     is_url_in_filtered_hosts = urlparse(match_result.link).netloc in filtered_hosts
     if is_url_in_filtered_hosts:
@@ -410,9 +402,7 @@ def get_tags_from_match_result(
     elif not tags:
         try:
             if browser is None:
-                browser = mechanicalsoup.StatefulBrowser(
-                    soup_config={"features": "lxml"}
-                )
+                browser = mechanicalsoup.StatefulBrowser(soup_config={"features": "lxml"})
                 browser.raise_on_404 = True
             browser.open(match_result.link, timeout=10)
             page = browser.get_current_page()
@@ -421,12 +411,8 @@ def get_tags_from_match_result(
             if new_tags:
                 for tag in new_tags:
                     namespace, tag_name = tag
-                    tag_model = Tag.get_or_create(name=tag_name, namespace=namespace)[
-                        0
-                    ]  # type: Tag
-                    MatchTagRelationship.get_or_create(
-                        match=match_result, tag=tag_model
-                    )
+                    tag_model = Tag.get_or_create(name=tag_name, namespace=namespace)[0]  # type: Tag
+                    MatchTagRelationship.get_or_create(match=match_result, tag=tag_model)
                     new_tag_models.append(tag_model)
             else:
                 log.debug("No tags found.")

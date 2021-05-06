@@ -58,18 +58,12 @@ def init_program(db_path: str = default_db_path) -> None:
     models.init_db(db_path, db_version)
 
 
-def write_url_from_match_result(
-    match_result: models.ImageMatch, folder: str = None
-) -> None:
+def write_url_from_match_result(match_result: models.ImageMatch, folder: str = None) -> None:
     """Write url from match result."""
     netloc = urlparse(match_result.link).netloc
     sanitized_netloc = netloc.replace(".", "_")
     text_file_basename = sanitized_netloc + ".txt"
-    text_file = (
-        os.path.join(folder, text_file_basename)
-        if folder is not None
-        else text_file_basename
-    )
+    text_file = os.path.join(folder, text_file_basename) if folder is not None else text_file_basename
     with open(text_file, "a") as f:
         f.write(match_result.link)
         f.write("\n")
@@ -105,9 +99,7 @@ def get_result_on_windows(
     shutil.copyfile(image, temp_f.name)
     # get image to be posted based on user input
     try:
-        post_img = models.get_posted_image(
-            img_path=temp_f.name, resize=resize, size=size, thumb_path=thumb_temp_f.name
-        )
+        post_img = models.get_posted_image(img_path=temp_f.name, resize=resize, size=size, thumb_path=thumb_temp_f.name)
     except OSError as e:
         raise OSError(str(e) + " when processing {}".format(image)) from e
     # append data to result
@@ -120,16 +112,10 @@ def get_result_on_windows(
         url, im_place = iqdb_url_dict[place]
         use_requests = place != "e621"
         post_img_path = temp_f.name if not resize else thumb_temp_f.name
-        page = models.get_page_result(
-            image=post_img_path, url=url, browser=browser, use_requests=use_requests
-        )
+        page = models.get_page_result(image=post_img_path, url=url, browser=browser, use_requests=use_requests)
         # if ok, will output: <Response [200]>
         page_soup = BeautifulSoup(page, "lxml")
-        result = list(
-            parse.get_or_create_image_match_from_page(
-                page=page_soup, image=post_img, place=im_place
-            )
-        )
+        result = list(parse.get_or_create_image_match_from_page(page=page_soup, image=post_img, place=im_place))
         result = [x[0] for x in result]
     # temp_f
     temp_f.close()
@@ -180,13 +166,9 @@ def run_program_for_single_img(  # pylint: disable=too-many-branches, too-many-s
     result = []  # type: List[models.ImageMatch]
 
     if platform.system() == "Windows":
-        result = get_result_on_windows(
-            image, place, resize=resize, size=size, browser=br
-        )
+        result = get_result_on_windows(image, place, resize=resize, size=size, browser=br)
     else:
-        with NamedTemporaryFile(delete=False) as temp, NamedTemporaryFile(
-            delete=False
-        ) as thumb_temp:
+        with NamedTemporaryFile(delete=False) as temp, NamedTemporaryFile(delete=False) as thumb_temp:
             shutil.copyfile(image, temp.name)
             try:
                 post_img = models.get_posted_image(
@@ -207,16 +189,10 @@ def run_program_for_single_img(  # pylint: disable=too-many-branches, too-many-s
                 url, im_place = iqdb_url_dict[place]
                 use_requests = place != "e621"
                 post_img_path = temp.name if not resize else thumb_temp.name
-                page = models.get_page_result(
-                    image=post_img_path, url=url, browser=br, use_requests=use_requests
-                )
+                page = models.get_page_result(image=post_img_path, url=url, browser=br, use_requests=use_requests)
                 # if ok, will output: <Response [200]>
                 page_soup = BeautifulSoup(page, "lxml")
-                result = list(
-                    parse.get_or_create_image_match_from_page(
-                        page=page_soup, image=post_img, place=im_place
-                    )
-                )
+                result = list(parse.get_or_create_image_match_from_page(page=page_soup, image=post_img, place=im_place))
                 result = [x[0] for x in result]
 
     if match_filter == "best-match":
@@ -229,9 +205,7 @@ def run_program_for_single_img(  # pylint: disable=too-many-branches, too-many-s
     for item in result:
         match_result = item.match.match_result  # type: models.Match
         url = match_result.link
-        log.debug(
-            "match status", similarity=item.similarity, status=item.status_verbose
-        )
+        log.debug("match status", similarity=item.similarity, status=item.status_verbose)
         log.debug("url", v=url)
 
         try:
@@ -277,24 +251,18 @@ def create_app(script_info: Optional[Any] = None) -> Any:
     default_log_file = os.path.join(log_dir, "iqdb_tagger_server.log")
     file_handler = TimedRotatingFileHandler(default_log_file, "midnight")
     file_handler.setLevel(logging.WARNING)
-    file_handler.setFormatter(
-        logging.Formatter("<%(asctime)s> <%(levelname)s> %(message)s")
-    )
+    file_handler.setFormatter(logging.Formatter("<%(asctime)s> <%(levelname)s> %(message)s"))
     app.logger.addHandler(file_handler)
     app.logger.addHandler(peewee_logger)
     app.logger.addHandler(chardet_logger)
     # reloader
-    reloader = app.config["TEMPLATES_AUTO_RELOAD"] = (
-        bool(os.getenv("IQDB_TAGGER_RELOADER")) or app.config["TEMPLATES_AUTO_RELOAD"]
-    )  # NOQA
+    reloader = app.config["TEMPLATES_AUTO_RELOAD"] = bool(os.getenv("IQDB_TAGGER_RELOADER")) or app.config["TEMPLATES_AUTO_RELOAD"]  # NOQA
     if reloader:
         app.jinja_env.auto_reload = True
     app.config["SECRET_KEY"] = os.getenv("IQDB_TAGGER_SECRET_KEY") or os.urandom(24)
     app.config["WTF_CSRF_ENABLED"] = False
     # debug
-    debug = app.config["DEBUG"] = (
-        bool(os.getenv("IQDB_TAGGER_DEBUG")) or app.config["DEBUG"]
-    )
+    debug = app.config["DEBUG"] = bool(os.getenv("IQDB_TAGGER_DEBUG")) or app.config["DEBUG"]
     if debug:
         app.config["DEBUG"] = True
         app.config["LOGGER_HANDLER_POLICY"] = "debug"
@@ -320,9 +288,7 @@ def create_app(script_info: Optional[Any] = None) -> Any:
         app,
         name="IQDB Tagger",
         template_mode="bootstrap3",
-        index_view=views.HomeView(
-            name="Home", template="iqdb_tagger/index.html", url="/"
-        ),
+        index_view=views.HomeView(name="Home", template="iqdb_tagger/index.html", url="/"),
     )
     app_admin.add_view(views.MatchView())
     # app_admin.add_view(ModelView(ImageMatch, category='DB'))
@@ -349,10 +315,7 @@ def get_version(ctx: Any, _: Any, value: Any):
     """Get version."""
     if not value or ctx.resilient_parsing:
         return
-    message = (
-        "%(app_name)s %(app_version)s\n"
-        "Python %(python)s\nFlask %(flask)s\nWerkzeug %(werkzeug)s"
-    )
+    message = "%(app_name)s %(app_version)s\n" "Python %(python)s\nFlask %(flask)s\nWerkzeug %(werkzeug)s"
     click.echo(
         message
         % {
@@ -400,9 +363,7 @@ def cli() -> None:
 )
 @click.option("--verbose", "-v", is_flag=True, help="Verbose output.")
 @click.option("--debug", "-d", is_flag=True, help="Print debug output.")
-@click.option(  # pylint: disable=too-many-branches
-    "--abort-on-error", is_flag=True, help="Stop program when error occured"
-)
+@click.option("--abort-on-error", is_flag=True, help="Stop program when error occured")  # pylint: disable=too-many-branches
 @click.argument("prog-input")
 def cli_run(
     prog_input: str = None,
@@ -431,11 +392,7 @@ def cli_run(
     if log_level:
 
         logging.basicConfig(
-            handlers=[
-                logging.FileHandler(
-                    os.path.join(user_data_dir, "output.log"), "w", "utf-8"
-                )
-            ],
+            handlers=[logging.FileHandler(os.path.join(user_data_dir, "output.log"), "w", "utf-8")],
             level=log_level,
         )
 
@@ -502,9 +459,7 @@ def cli_run(
             log.error("path: " + x[0] + "\nerror: " + str(x[1]))
 
 
-def get_hydrus_set(
-    search_tags: List[str], client: Client, resize: bool = True
-) -> Iterator[Dict[str, Any]]:
+def get_hydrus_set(search_tags: List[str], client: Client, resize: bool = True) -> Iterator[Dict[str, Any]]:
     """Get hydrus result.
 
     Args:
@@ -575,9 +530,7 @@ def search_hydrus_and_send_url(
         args.append(hydrus_url)
     cl = Client(*args)
     for res_dict in get_hydrus_set(search_tags, cl, resize=not no_resize):
-        match_results = [
-            x[0] for x in res_dict["iqdb_result"]["match result tag pairs"]
-        ]
+        match_results = [x[0] for x in res_dict["iqdb_result"]["match result tag pairs"]]
         if match_results:
             for item in match_results:
                 cl.add_url(item.link)

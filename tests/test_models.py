@@ -28,9 +28,7 @@ def test_get_or_create_from_path(tmpdir):
     assert created
     assert img.width, img.height == size
     assert img.path == img_path
-    assert (
-        img.checksum == "2a951983fcb673f586c698e4ff8c15d930dcc997f897e42aef77a09099673025"
-    )
+    assert img.checksum == "2a951983fcb673f586c698e4ff8c15d930dcc997f897e42aef77a09099673025"
 
 
 def test_thumbnail_rel_get_or_create_existing_thumbnail(tmpdir):
@@ -47,11 +45,7 @@ def test_thumbnail_rel_get_or_create_existing_thumbnail(tmpdir):
 def test_tags_from_img_alt():
     """Test method."""
     m1 = models.Match()
-    m1.img_alt = [
-        "Rating: e Score: 5 Tags: "
-        "dungeon_ni_deai_wo_motomeru_no_wa_machigatteiru_darou_ka "
-        "hestia_(dungeon)"
-    ]
+    m1.img_alt = ["Rating: e Score: 5 Tags: " "dungeon_ni_deai_wo_motomeru_no_wa_machigatteiru_darou_ka " "hestia_(dungeon)"]
 
     exp_result = [
         "Rating: e",

@@ -19,6 +19,8 @@ from iqdb_tagger.models import ImageModel, ThumbnailRelationship, get_posted_ima
 logging.basicConfig()
 vcr_log = logging.getLogger("vcr")
 vcr_log.setLevel(logging.INFO)
+main1_json = Path(__file__).parent / "file" / "main1.json"
+main1_html = Path(__file__).parent / "file" / "main1.html"
 
 
 def get_casette_path(filename):
@@ -46,9 +48,7 @@ def test_rgba_on_get_posted_image(tmpdir):
     get_posted_image(rgba_file.strpath, output_thumb_folder=thumb_folder.strpath)
 
 
-def test_empty_file_when_get_posted_image(
-    tmpdir, tmp_img  # pylint:disable=redefined-outer-name
-):
+def test_empty_file_when_get_posted_image(tmpdir, tmp_img):  # pylint:disable=redefined-outer-name
     """Test method."""
     # compatibility
     img_path = tmp_img
@@ -99,7 +99,7 @@ def test_main(tmpdir, tmp_img):  # pylint:disable=redefined-outer-name
 @vcr.use_cassette(get_casette_path("main1"), record_mode="new_episodes")
 def test_get_iqdb_result(tmp_img):
     """Test get_iqdb_result."""
-    with open(str(Path(__file__).parent / "file" / "main1.json")) as f:
+    with main1_json.open() as f:
         json_res = json.load(f)
     # fix json list which actually a tuple
     temp_list = []
@@ -112,9 +112,9 @@ def test_get_iqdb_result(tmp_img):
 
 def test_parse_iqdb_result_page():
     """Test iqdb page parsing result."""
-    with open(str(Path(__file__).parent / "file" / "main1.html")) as f:
+    with main1_html.open() as f:
         soup = BeautifulSoup(f.read(), "lxml")
-    with open(str(Path(__file__).parent / "file" / "main1.json")) as f:
+    with main1_json.open() as f:
         json_res = json.load(f)
     # fix json list which actually a tuple
     temp_list = []
