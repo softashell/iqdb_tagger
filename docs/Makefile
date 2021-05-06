@@ -51,13 +51,22 @@ help:
 	@echo "  livehtml   to run sphinx-autobuild"
 	@echo "  test   		to run pytest"
 	@echo "  livetest   to run pytest-watch"
+	@echo "  apidoc   	to run sphinx-apidoc"
 
 .PHONY: livetest
 livetest:
-	ptw --runner "pytest --flake8 --mypy --cov=iqdb_tagger --cov-report html --cov iqdb_tagger .. -vv"
+	ptw --runner "pytest --flake8 --mypy --cov=iqdb_tagger --cov-report html --cov iqdb_tagger -vv .." ..
+
 .PHONY: test
 test:
-	pytest --flake8 --mypy --cov=iqdb_tagger --cov-report html --cov iqdb_tagger .. -vv
+	black ..
+	pytest --flake8 --mypy --cov=iqdb_tagger --cov-report html --cov iqdb_tagger -vv ..
+	find .. -iname "*.py" -and -not -path '../.tox/*' -and -not -path '../docs/*' | xargs pylint --rcfile=../.pylintrc
+	mypy --config-file ../mypy.ini ..
+
+.PHONY: apidoc
+apidoc:
+	sphinx-apidoc -o source ../iqdb_tagger
 
 .PHONY: livehtml
 livehtml:
