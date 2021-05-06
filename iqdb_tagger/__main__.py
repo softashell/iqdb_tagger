@@ -90,39 +90,37 @@ def get_result_on_windows(
     """
     result = []
     # temp_f
-    temp_f = NamedTemporaryFile(mode="w+t", delete=False)
-    temp_file_name = temp_f.name
-    # thumb_temp_f
-    thumb_temp_f = NamedTemporaryFile(mode="w+t", delete=False)
-    thumb_temp_file_name = thumb_temp_f.name
-    # copy to temp file
-    shutil.copyfile(image, temp_f.name)
-    # get image to be posted based on user input
-    try:
-        post_img = models.get_posted_image(img_path=temp_f.name, resize=resize, size=size, thumb_path=thumb_temp_f.name)
-    except OSError as e:
-        raise OSError(str(e) + " when processing {}".format(image)) from e
-    # append data to result
-    for img_m_rel_set in post_img.imagematchrelationship_set:
-        for item_set in img_m_rel_set.imagematch_set:
-            if item_set.search_place_verbose == place:
-                result.append(item_set)
 
-    if not result:
-        url, im_place = iqdb_url_dict[place]
-        use_requests = place != "e621"
-        post_img_path = temp_f.name if not resize else thumb_temp_f.name
-        page = models.get_page_result(image=post_img_path, url=url, browser=browser, use_requests=use_requests)
-        # if ok, will output: <Response [200]>
-        page_soup = BeautifulSoup(page, "lxml")
-        result = list(parse.get_or_create_image_match_from_page(page=page_soup, image=post_img, place=im_place))
-        result = [x[0] for x in result]
-    # temp_f
-    temp_f.close()
-    os.remove(temp_file_name)
-    # thumb_temp_f
-    thumb_temp_f.close()
-    os.remove(thumb_temp_file_name)
+    with NamedTemporaryFile(mode="w+t", delete=False) as temp_f, NamedTemporaryFile(mode="w+t", delete=False) as thumb_temp_f:
+        temp_file_name = temp_f.name
+        thumb_temp_file_name = thumb_temp_f.name
+        # copy to temp file
+        shutil.copyfile(image, temp_f.name)
+        # get image to be posted based on user input
+        try:
+            post_img = models.get_posted_image(img_path=temp_f.name, resize=resize, size=size, thumb_path=thumb_temp_f.name)
+        except OSError as e:
+            raise OSError(str(e) + " when processing {}".format(image)) from e
+        # append data to result
+        for img_m_rel_set in post_img.imagematchrelationship_set:
+            for item_set in img_m_rel_set.imagematch_set:
+                if item_set.search_place_verbose == place:
+                    result.append(item_set)
+
+        if not result:
+            url, im_place = iqdb_url_dict[place]
+            use_requests = place != "e621"
+            post_img_path = temp_f.name if not resize else thumb_temp_f.name
+            page = models.get_page_result(image=post_img_path, url=url, browser=browser, use_requests=use_requests)
+            # if ok, will output: <Response [200]>
+            page_soup = BeautifulSoup(page, "lxml")
+            result = list(parse.get_or_create_image_match_from_page(page=page_soup, image=post_img, place=im_place))
+            result = [x[0] for x in result]
+    for item in [temp_file_name, thumb_temp_file_name]:
+        try:
+            os.remove(item)
+        except Exception:  # pylint: disable=broad-except
+            log.exception("error removing {}".format(item))
     return result
 
 
