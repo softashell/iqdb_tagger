@@ -313,7 +313,7 @@ def get_version(ctx: Any, _: Any, value: Any):
     """Get version."""
     if not value or ctx.resilient_parsing:
         return
-    message = "%(app_name)s %(app_version)s\n" "Python %(python)s\nFlask %(flask)s\nWerkzeug %(werkzeug)s"
+    message = "%(app_name)s %(app_version)s\nPython %(python)s\nFlask %(flask)s\nWerkzeug %(werkzeug)s"
     click.echo(
         message
         % {
