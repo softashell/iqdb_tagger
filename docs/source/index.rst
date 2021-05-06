@@ -20,7 +20,7 @@ Contents:
    :maxdepth: 2
 
    usage
-   api
+   modules
    changelog
 
 Indices and tables
