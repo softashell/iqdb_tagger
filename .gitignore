@@ -1,6 +1,12 @@
 *.jpg
+.coverage
 .mypy_cache/*
+.vimrc
+__pycache__/*
 dist/*
+docs/build/*
+docs/source/__pycache__/
+htmlcov
 iqdb_tagger.egg-info/*
 iqdb_tagger/*.py@neomake_*.py
 iqdb_tagger/note.md
