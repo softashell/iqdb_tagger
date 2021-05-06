@@ -49,11 +49,28 @@ help:
 	@echo "  coverage   to run coverage check of the documentation (if enabled)"
 	@echo "  dummy      to check syntax errors of document sources"
 	@echo "  livehtml   to run sphinx-autobuild"
+	@echo "  test   		to run pytest"
+	@echo "  livetest   to run pytest-watch"
+	@echo "  apidoc   	to run sphinx-apidoc"
+
+.PHONY: livetest
+livetest:
+	ptw --runner "pytest --flake8 --mypy --cov=iqdb_tagger --cov-report html --cov iqdb_tagger -vv .." ..
+
+.PHONY: test
+test:
+	black ..
+	pytest --flake8 --mypy --cov=iqdb_tagger --cov-report html --cov iqdb_tagger -vv ..
+	find .. -iname "*.py" -and -not -path '../.tox/*' -and -not -path '../docs/*' | xargs pylint --rcfile=../.pylintrc
+	mypy --config-file ../mypy.ini ..
+
+.PHONY: apidoc
+apidoc:
+	sphinx-apidoc -o source ../iqdb_tagger
 
 .PHONY: livehtml
 livehtml:
 	sphinx-autobuild -q \
-		-p 0 \
 		--open-browser \
 		--delay 5 \
 		--ignore "*.swp" \

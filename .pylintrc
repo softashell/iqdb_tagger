@@ -29,4 +29,4 @@ disable=
   #Either all return statements in a function should return an expression, or none of them should
   inconsistent-return-statements,
 max-line-length=140
-max-branches=13
+max-branches=14

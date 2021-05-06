@@ -41,7 +41,7 @@ Use as Hydrus iqdb script server
 .. code:: bash
 
     `iqdb-tagger run -h 127.0.0.1 -p 5006`
-  
+
 2. Import one of the parsing scripts below to Hydrus parsing scripts.
 3. Check the server address and edit it as needed.
 
@@ -58,7 +58,7 @@ Using IQDB-tagger with Hydrus API
 
 Set up your hydrus to get the access key, which will be used for this feature.
 
-Install the required hydrus package 
+Install the required hydrus package
 
 .. code:: bash
 
@@ -106,7 +106,7 @@ Here is example for Synology DS1817+ with DSM6.1.7 running on an Intel Atom C253
 
 .. code:: bash
 
-  export PATH=$PATH:/volume1/@appstore/py3k/usr/local/bin 
+  export PATH=$PATH:/volume1/@appstore/py3k/usr/local/bin
 
 That command line above can also be put on `~/.bashrc`, so NAS will run it everytime user login.
 
@@ -152,7 +152,30 @@ Please follow this guide to install lxml: `StackOverflow - how to install lxml o
 Contributing
 ------------
 
-TBD
+To test the program do the following:
+
+.. code:: bash
+
+  $ # install required package
+  $ pip install -e ".[dev]"
+  $ cd docs
+  $ make test
+
+To upload the new version, do the following:
+
+
+1. register to pypi and test.pypi
+2. upgrade setuptools. setuptools>=38.6.0 is required to produce a distribution with the new metadata
+3. make a source distribution. command: python setup.py sdist. in this example it will produce dist/iqdb_tagger-0.3.2.tar.gz
+4. install twine>=1.11.0.
+5. upload first to test.pypi. command: twine upload --repository-url https://test.pypi.org/legacy/ dist/iqdb_tagger-0.3.2.tar.gz
+6. if upload success but result is not as intended, change the version with postn-suffix format. fix the program and go to number 5.
+7. if upload sucsess and result is as intended:
+
+  1. check the program version. maybe rolled it back to original if possible
+  2. upload it to pypi. command: twine upload --repository-url https://upload.pypi.org/legacy/ dist/iqdb_tagger-0.3.2.tar.gz
+
+this guideline is based on this guide https://dustingram.com/articles/2018/03/16/markdown-descriptions-on-pypi
 
 Licence
 -------
