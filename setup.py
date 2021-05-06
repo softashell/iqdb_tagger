@@ -77,6 +77,7 @@ setup(
             "pytest-flake8",
             "pytest-mypy",
             "pytest>=6.2.4",
+            "twine>=3.4.1",
             "vcrpy>=4.1.1",
         ],
     },
