@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.3.2 (2021-05-06)
+``````````````````
+
+- return when no file id
+- chunks file ids
+- resize flag for subcommands
+
 0.3.1 (2019-07-26)
 ``````````````````
 
