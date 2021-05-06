@@ -96,6 +96,7 @@ def test_main(tmpdir, tmp_img):  # pylint:disable=redefined-outer-name
     assert result.exit_code == 0
 
 
+@pytest.mark.skipif(not main1_json.is_file(), reason="main1.json is not exist")
 @vcr.use_cassette(get_casette_path("main1"), record_mode="new_episodes")
 def test_get_iqdb_result(tmp_img):
     """Test get_iqdb_result."""
@@ -110,6 +111,7 @@ def test_get_iqdb_result(tmp_img):
     assert list(main.get_iqdb_result(tmp_img.strpath)) == json_res
 
 
+@pytest.mark.skipif(not all([main1_json.is_file(), main1_html.is_file()]), reason="main1 files not exist")
 def test_parse_iqdb_result_page():
     """Test iqdb page parsing result."""
     with main1_html.open() as f:
