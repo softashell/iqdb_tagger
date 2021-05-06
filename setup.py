@@ -1,10 +1,9 @@
 """setup file."""
+from distutils.util import convert_path  # NOQA; pylint: disable=import-error,E0611
 from os import path
 from typing import Dict  # NOQA
 
-from distutils.util import convert_path  # NOQA; pylint: disable=import-error,E0611
 from setuptools import find_packages, setup
-
 
 # get version from package
 #  https://stackoverflow.com/a/24517154/1766261
@@ -42,23 +41,23 @@ setup(
     maintainer="Rachmadani Haryono",
     maintainer_email="foreturiga@gmail.com",
     install_requires=[
-        "appdirs>=1.4.3",
-        "beautifulsoup4>=4.6.3",
-        "cfscrape>=1.9.5",
-        "click>=7.0",
-        "Flask-Admin>=1.5.2",
-        "flask-paginate>=0.5.1",
+        "appdirs>=1.4.4",
+        "beautifulsoup4>=4.9.3",
+        "cfscrape>=2.1.1",
+        "click>=7.1.2",
+        "Flask-Admin>=1.5.8",
+        "flask-paginate>=0.8.1",
         "Flask-RESTful>=0.3.8",
-        "Flask-WTF>=0.14.2",
-        "Flask>=1.0.2",
+        "Flask-WTF>=0.14.3",
+        "Flask>=1.1.2",
         "funclog>=0.3.0",
-        "hydrus-api>=2.14.2",
-        "lxml>=3.8.0",
-        "MechanicalSoup>=0.7.0",
-        "peewee>=2.10.1",
-        "Pillow>=4.2.1",
-        "structlog>=17.2.0",
-        "wtf-peewee>=3.0.0",
+        "hydrus-api>=2.14.3",
+        "lxml>=4.6.3",
+        "MechanicalSoup>=1.0.0",
+        "peewee>=3.14.4",
+        "Pillow>=8.2.0",
+        "structlog>=21.1.0",
+        "wtf-peewee>=3.0.2",
     ],
     extras_require={
         "doc": [
@@ -67,17 +66,18 @@ setup(
             "Sphinx>=1.6.3",
         ],
         "dev": [
+            "black",
             "flake8-docstrings>=1.1.0",
             "flake8-quotes>=0.11.0",
-            "flake8>=3.3.0",
+            "flake8>=3.9.1",
             "isort",
-            "mypy>=0.701",
+            "mypy>=0.812",
             "pydocstyle<4.0.0",
-            "pylint>=1.7.2",
+            "pylint>=2.8.2",
             "pytest-flake8",
             "pytest-mypy",
-            "pytest>=3.1.2",
-            "vcrpy>=1.11.1",
+            "pytest>=6.2.4",
+            "vcrpy>=4.1.1",
         ],
     },
     entry_points={
